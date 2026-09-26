@@ -21,6 +21,7 @@ import { formatPlanForHuman } from './policy/plan.ts';
 import { ApiVersionMismatchError, KitContractError } from './kit/client.ts';
 import { PolicyError } from './policy/errors.ts';
 import { Store } from './db/store.ts';
+import { buildReport, formatReport, parseSince, REPORT_NOTE } from './report.ts';
 import { parseArgs, printHelp, fail, type Flags } from './cli/args.ts';
 
 export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
@@ -40,7 +41,9 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
 
   let config: HarnessConfig;
   try {
-    config = loadConfig({ ...configOptions(flags), requireModel: command === 'chat' });
+    // history and report read the harness database only: no kit root, no model.
+    const databaseOnly = command === 'history' || command === 'report';
+    config = loadConfig({ ...configOptions(flags), requireModel: command === 'chat', requireKitRoot: !databaseOnly });
   } catch (error) {
     if (error instanceof ConfigError) {
       fail(error.message);
@@ -63,6 +66,8 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
         return await runChat(config, flags);
       case 'history':
         return runHistory(config, flags);
+      case 'report':
+        return runReport(config, flags);
       default:
         fail(`unknown command "${command}" — fagent help shows what there is`);
         return 2;
@@ -297,6 +302,23 @@ function runHistory(config: HarnessConfig, flags: Flags): number {
   process.stdout.write(`\n${store.countApprovals()} approval records · ${store.countToolCalls()} tool calls in ${config.dbPath}\n`);
   store.close();
   return 0;
+}
+
+/** M6: a summary of a period from the audit trail. Opens the database, never the kit. */
+function runReport(config: HarnessConfig, flags: Flags): number {
+  const since = parseSince(flags.since ?? '7d');
+  if (!since) {
+    fail(`--since must look like 7d, 24h, 90m or a date (2026-09-01), got "${String(flags.since)}"`);
+    return 2;
+  }
+  const store = Store.open(config.dbPath);
+  try {
+    const report = buildReport(store, since);
+    process.stdout.write(flags.json === 'true' ? `${JSON.stringify({ note: REPORT_NOTE, ...report }, null, 2)}\n` : formatReport(report));
+    return 0;
+  } finally {
+    store.close();
+  }
 }
 
 function collectParameters(params: readonly string[], switches: readonly string[]): Record<string, string | number | boolean | string[]> {

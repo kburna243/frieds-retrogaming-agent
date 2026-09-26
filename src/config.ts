@@ -44,6 +44,8 @@ export interface LoadOptions extends Partial<Record<keyof HarnessConfig, unknown
   model?: string;
   baseUrl?: string;
   transport?: string;
+  /** `history` and `report` only read the harness database; they work without a kit root. */
+  requireKitRoot?: boolean;
   /** Only `chat` needs a model; doctor, tools, status and run work without one. */
   requireModel?: boolean;
 }
@@ -56,8 +58,8 @@ export function defaultDbPath(env: NodeJS.ProcessEnv = process.env): string {
 }
 
 export function loadConfig(options: LoadOptions = {}, env: NodeJS.ProcessEnv = process.env): HarnessConfig {
-  const kitRoot = options.kitRoot ?? env.FAGENT_KIT_ROOT ?? env.KIT_ROOT;
-  if (!kitRoot) {
+  const kitRoot = options.kitRoot ?? env.FAGENT_KIT_ROOT ?? env.KIT_ROOT ?? '';
+  if (!kitRoot && options.requireKitRoot !== false) {
     throw new ConfigError(
       'no kit root. Point the harness at the kit checkout: --kit D:\\cabinet\\frieds-retrogaming-kit or FAGENT_KIT_ROOT. ' +
         'Nothing else works without it — the harness is a client of the kit, not a copy of it.',

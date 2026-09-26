@@ -27,8 +27,9 @@
 > **Stand: v0.1.0**, gegen ein echtes Kit auf einem Windows-Automaten geprüft. Client, Policy-Gate, SQLite-Gedächtnis,
 > CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt mit einer
 > Zusammenfassung der früheren (M1), der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
-> Automaten gelaufen), `npm i -g .` installiert `fagent` (M2), und die Datenbank migriert sich selbst. Offen: ein
-> vollständiger Katalog-Snapshot von Kit v0.3.0. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
+> Automaten gelaufen), `npm i -g .` installiert `fagent` (M2), `fagent report` fasst einen Zeitraum zusammen (M6),
+> und die Datenbank migriert sich selbst. Der Vertrag ist auf Kit v0.3.0 festgeschrieben. Offen: Terminal-Bedienung
+> (M3) und Szenarien (M5). Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
 > und die [ROADMAP](ROADMAP.md).
 
 ---
@@ -91,7 +92,7 @@ Modell verlässt gar nichts den PC.
 | **Packaging** (M2) | 🆕 Unveröffentlicht | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
 | **Datenbank-Migrationen** | 🆕 Unveröffentlicht | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
 | **MCP-Transport** (M4) | 🆕 Unveröffentlicht | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
-| **Berichtsmodus** (`fagent report`) | 🚧 Geplant (M6) | eine Zusammenfassung aus dem Audit-Trail, ohne Schreibzugriff aufs Kit |
+| **Berichtsmodus** (M6) | 🆕 Unveröffentlicht | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
 
 ---
 
@@ -138,6 +139,7 @@ er war.
 fagent chat --model qwen2.5:3b  # lokales Modell über Ollama
 fagent chat --demo              # ganz ohne Modell: eine geskriptete Diagnose
 fagent history --last 20        # was der Harness getan hat, aus seiner Datenbank
+fagent report --since 7d        # eine Zusammenfassung der letzten Woche für Menschen (--json für Maschinen)
 ```
 `chat` beginnt mit einer kurzen Zusammenfassung der früheren Sitzungen; `--no-memory` beginnt ohne.
 

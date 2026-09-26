@@ -117,7 +117,7 @@ function sessionBlock(store: Store, session: Row, anonymizeRequired: boolean, ma
 }
 
 /** Plan statuses in words that describe the past and grant nothing. */
-const PLAN_OUTCOME: Record<string, string> = {
+export const PLAN_OUTCOME: Record<string, string> = {
   shown: 'plan shown, no decision recorded',
   proposed: 'plan proposed, never shown',
   approved: 'the person said yes then',

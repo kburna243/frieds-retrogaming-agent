@@ -39,7 +39,7 @@ harness version, independent of the kit's.
 
 - `README.md` / `README.de.md` follow the layout of the kit's README: header, badges, status note, feature status,
   quickstart, safety principles, documentation index.
-- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (110).
+- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (116).
 
 - **The fake cabinet speaks kit 0.3.0:** `backup.remove` (only kit backups, recognized in the dry run too),
   `profile.export` (the plan is the call) and `profile.import` (rows, `NeedsUser` stops the plan, `AutoInstall` asks
@@ -50,6 +50,10 @@ harness version, independent of the kit's.
   `fagent run` goes through `PolicyEngine.runOperation`, the same gate for a person, not limited to the tools.
 - A refused dry run (`DRY_RUN_NOT_SHOWNABLE`) carries the kit's `Warnings` and `Errors` to the model.
 - `test/kit-v030.test.ts` (12 tests).
+- **Report mode (M6):** `fagent report [--since 7d|24h|90m|<date>] [--json]` summarizes a period from the audit
+  trail: sessions, calls by stage, one line per plan with how it ended, refusal codes, the last doctor reading. It
+  says it is history and suggests no change. `src/report.ts` imports only the store and the memory wording.
+  `history` and `report` no longer need a kit root. `test/report.test.ts` (6 tests).
 
 ### Fixed
 

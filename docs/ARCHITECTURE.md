@@ -83,6 +83,12 @@ remembered yes is not an approval); `loop.ts` is eight rounds of "model asks, ga
 every message and every tool call logged. It ends when the model answers without a tool call, or when the round
 budget runs out — never when a change was applied, because applying is not the same as being done.
 
+### `src/report.ts`
+
+`fagent report` builds a summary of a period from the database alone: sessions, calls by stage, one line per plan
+with how it ended, refusal codes, the last doctor reading. It imports the store and the memory wording and nothing
+from `src/kit/`, so it cannot call the kit; `history` and `report` need no kit root.
+
 ### `src/cli.ts` and `src/harness.ts`
 
 `createHarness()` wires the layers and is the only place that decides which transport exists. The CLI is the same
