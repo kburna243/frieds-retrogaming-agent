@@ -23,15 +23,15 @@ export function Roadmap() {
     {
       id: "M4",
       title: "MCP Server Transport",
-      textDe: "Vollständige stdio-Integration des Model Context Protocols gegen Kit 0.3.0.",
-      textEn: "Full stdio integration of the Model Context Protocol against Kit 0.3.0.",
+      textDe: "Vollständige stdio-Integration des Model Context Protocols gegen Kit 0.3.1 (API 1.1).",
+      textEn: "Full stdio integration of the Model Context Protocol against Kit 0.3.1 (API 1.1).",
       done: true,
     },
     {
       id: "M5",
       title: "Local LLM Live",
-      textDe: "Live am Automaten verifiziert: Autonome Diagnose mit Ollama (Llama 3.2).",
-      textEn: "Verified live on real cabinet: Autonomous diagnosis with Ollama (Llama 3.2).",
+      textDe: "Live am Automaten verifiziert: Autonome Diagnose mit Ollama (Llama 3.2, Qwen 2.5).",
+      textEn: "Verified live on real cabinet: Autonomous diagnosis with Ollama (Llama 3.2, Qwen 2.5).",
       done: true,
     },
     {
@@ -43,10 +43,10 @@ export function Roadmap() {
     },
     {
       id: "M3",
-      title: "Terminal Streaming",
+      title: "Terminal Streaming & Continuing",
       textDe: "Token-Streaming für lokale Modelle, chat --continue und lückenloses --json.",
       textEn: "Token streaming for local models, chat --continue and consistent --json outputs.",
-      done: false,
+      done: true,
     },
     {
       id: "HAL",

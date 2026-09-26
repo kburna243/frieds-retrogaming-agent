@@ -3,12 +3,14 @@
   <h1>🤖 Fried's Retrogaming Agent</h1>
   <p><strong>Ein Modell, das deinen Automaten untersucht, und ein Gate, das dafür sorgt, dass du ja sagst</strong></p>
 
-  [![Kit API](https://img.shields.io/badge/Kit%20API-v1-ff2d95?style=for-the-badge)](contract/API.md)
+  [![Kit API](https://img.shields.io/badge/Kit%20API-v1.1-ff2d95?style=for-the-badge)](contract/API.md)
+  [![Release](https://img.shields.io/badge/Release-v0.2.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)
   [![Node](https://img.shields.io/badge/Node-24%2B-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
   [![Laufzeit-Abhängigkeiten](https://img.shields.io/badge/Laufzeit--Abh%C3%A4ngigkeiten-0-3DDC84?style=for-the-badge)](package.json)
   [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow?style=for-the-badge)](LICENSE)
   [![Dokumentation](https://img.shields.io/badge/Doku-English%20%7C%20Deutsch-3DDC84?style=for-the-badge&logo=gitbook&logoColor=white)](docs/)
   [![CI](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/ci.yml)
+  [![Pages](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/deploy-pages.yml?style=for-the-badge&label=Pages)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/deploy-pages.yml)
   [![Mensch entscheidet](https://img.shields.io/badge/--yes-gibt%20es%20nicht-FFC857?style=for-the-badge)](docs/POLICY.md)
   [![Website](https://img.shields.io/badge/Website-kburna243.github.io%2Ffrieds--retrogaming--agent-ff2d95?style=for-the-badge&logo=googlechrome&logoColor=white)](https://kburna243.github.io/frieds-retrogaming-agent/)
 
@@ -18,20 +20,22 @@
     <a href="docs/POLICY.md"><strong>Policy</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architektur</strong></a> •
     <a href="docs/HANDOFF.md"><strong>Übergabe</strong></a> •
-    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Website</strong></a> •
-    <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>Das Kit</strong></a>
+    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Agent-Website</strong></a> •
+    <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>Das Kit</strong></a> •
+    <a href="https://kburna243.github.io/frieds-retrogaming-kit/"><strong>Kit-Website</strong></a>
   </p>
 </div>
 
 ---
 
 > [!NOTE]
-> **Stand: v0.2.0 auf `main`, das Tag fehlt noch.** Der Harness läuft an einem echten Windows-Automaten mit Kit
-> v0.3.1 (ApiVersion 1.1), über stdio und über den MCP-Server des Kits, und mit einem lokalen Modell über Ollama.
-> Seit v0.1.0: Gedächtnis über Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport,
-> `fagent report`, Datenbank-Migrationen und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge
-> seiner Kit-Aufrufe messen. Was bis 1.0 fehlt, passiert an einem Automaten und nicht im Cloud-Zugang: siehe
-> [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
+> **Stand: v0.2.0 veröffentlicht** ([Download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)).
+> Der Harness läuft an einem echten Windows-Automaten mit Kit v0.3.1 (ApiVersion 1.1), über stdio und über den MCP-Server
+> des Kits, und mit einem lokalen Modell über Ollama. Alle Meilensteine (M1–M6) sind abgeschlossen: Gedächtnis über
+> Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport, `fagent report`, Datenbank-Migrationen,
+> 138 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
+> messen. Der 12-stufige Smoke-Test lief zu 100% grün auf realer Hardware durch. Siehe [docs/HANDOFF.md](docs/HANDOFF.md),
+> das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
 
 ---
 

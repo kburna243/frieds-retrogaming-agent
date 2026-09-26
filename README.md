@@ -3,12 +3,14 @@
   <h1>🤖 Fried's Retrogaming Agent</h1>
   <p><strong>A model that diagnoses your cabinet, and a gate that makes sure you are the one who says yes</strong></p>
 
-  [![Kit API](https://img.shields.io/badge/Kit%20API-v1-ff2d95?style=for-the-badge)](contract/API.md)
+  [![Kit API](https://img.shields.io/badge/Kit%20API-v1.1-ff2d95?style=for-the-badge)](contract/API.md)
+  [![Release](https://img.shields.io/badge/Release-v0.2.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)
   [![Node](https://img.shields.io/badge/Node-24%2B-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
   [![Runtime deps](https://img.shields.io/badge/Runtime%20deps-0-3DDC84?style=for-the-badge)](package.json)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
   [![Documentation](https://img.shields.io/badge/Docs-English%20%7C%20Deutsch-3DDC84?style=for-the-badge&logo=gitbook&logoColor=white)](docs/)
   [![CI](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/ci.yml)
+  [![Pages](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/deploy-pages.yml?style=for-the-badge&label=Pages)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/deploy-pages.yml)
   [![Human in the loop](https://img.shields.io/badge/--yes-does%20not%20exist-FFC857?style=for-the-badge)](docs/POLICY.md)
   [![Website](https://img.shields.io/badge/Website-kburna243.github.io%2Ffrieds--retrogaming--agent-ff2d95?style=for-the-badge&logo=googlechrome&logoColor=white)](https://kburna243.github.io/frieds-retrogaming-agent/)
 
@@ -18,20 +20,21 @@
     <a href="docs/POLICY.md"><strong>Policy</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architecture</strong></a> •
     <a href="docs/HANDOFF.md"><strong>Handoff</strong></a> •
-    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Website</strong></a> •
-    <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>The Kit</strong></a>
+    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Agent Website</strong></a> •
+    <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>The Kit</strong></a> •
+    <a href="https://kburna243.github.io/frieds-retrogaming-kit/"><strong>Kit Website</strong></a>
   </p>
 </div>
 
 ---
 
 > [!NOTE]
-> **Status: v0.2.0 on `main`, waiting for its tag.** The harness runs on a real Windows cabinet against kit v0.3.1
-> (ApiVersion 1.1), over stdio and over the kit's MCP server, and with a local model through Ollama. Since v0.1.0:
-> memory across sessions, `npm i -g .`, streaming and `chat --continue`, the MCP transport, `fagent report`, database
-> migrations and three repeatable scenarios (`eval/`) that judge a model on the order of its kit calls. What is left
-> before 1.0 is a person at the cabinet: see [docs/HANDOFF.md](docs/HANDOFF.md), the
-> [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> **Status: v0.2.0 released** ([download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)).
+> The harness runs on a real Windows cabinet against kit v0.3.1 (ApiVersion 1.1), over stdio and over the kit's MCP server,
+> and with a local model through Ollama. All milestones (M1–M6) are completed: memory across sessions, `npm i -g .`,
+> streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 138 passing tests and three
+> repeatable scenarios (`eval/`) that judge a model on the order of its kit calls. The 12-step smoke test passed 12/12
+> on real hardware. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
