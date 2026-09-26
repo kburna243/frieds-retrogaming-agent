@@ -13,7 +13,7 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { defaultState, handle, parsePowerShellArgv } from './fake-kit.mjs';
+import { API_VERSION, KIT_VERSION, defaultState, handle, parsePowerShellArgv } from './fake-kit.mjs';
 
 const argv = process.argv.slice(2);
 const stateIndex = argv.findIndex((token) => token === '--state');
@@ -27,13 +27,14 @@ const request = parsePowerShellArgv(argv);
 const state = statePath && existsSync(statePath) ? JSON.parse(readFileSync(statePath, 'utf8')) : defaultState();
 
 if (request.parametersJsonError) {
-  // Same shape the real script produces for a broken -ParametersJson: a Failed result and exit 2.
+  // Same shape the real script produces for a broken -ParametersJson: a Failed result and exit 2. The fields come
+  // from the same constants as every other answer, so this path cannot quietly report another ApiVersion.
   const message = request.parametersJsonError;
   process.stdout.write(
     `${JSON.stringify({
-      ApiVersion: '1.0', Operation: String(request.operation ?? ''), Kind: 'Read', Success: false, Status: 'Failed',
-      Applied: false, Message: message, Warnings: [], Errors: [message], Changes: [], Backups: [], Approvals: [],
-      Duration: 0, StartedAt: new Date().toISOString(), Data: null,
+      ApiVersion: API_VERSION, KitVersion: KIT_VERSION, Operation: String(request.operation ?? ''), Kind: 'Read',
+      Success: false, Status: 'Failed', Applied: false, Message: message, Warnings: [], Errors: [message],
+      Changes: [], Backups: [], Approvals: [], Duration: 0, StartedAt: new Date().toISOString(), Data: null,
     })}\n`,
   );
   process.exit(2);
