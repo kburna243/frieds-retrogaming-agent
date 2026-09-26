@@ -1,0 +1,224 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00e676;
+  --color-secondary: #00b8ff;
+  --color-accent: #ffd600;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-bg: #0b1220;
+  --color-surface: #111827;
+  --color-border: #1f2937;
+  --color-text: #f8fafc;
+  --color-muted: #94a3b8;
+
+  --font-display: "Bangers", "Impact", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-pixel: "Press Start 2P", monospace;
+
+  --animate-blink: blink 1.1s steps(2, start) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-scan: scan 7s linear infinite;
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-pulse-ring: pulseRing 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-flicker: flicker 8s infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes blink {
+    to { visibility: hidden; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-2deg); }
+    50% { transform: translateY(-14px) rotate(2deg); }
+  }
+  @keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  @keyframes pulseRing {
+    0% { box-shadow: 0 0 0 0 rgb(0 230 118 / 0.55); }
+    70% { box-shadow: 0 0 0 10px rgb(0 230 118 / 0); }
+    100% { box-shadow: 0 0 0 0 rgb(0 230 118 / 0); }
+  }
+  @keyframes flicker {
+    0%, 97%, 100% { opacity: 1; }
+    98% { opacity: 0.85; }
+    99% { opacity: 0.95; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-bg text-text font-sans antialiased;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgb(0 184 255 / 0.12), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgb(0 230 118 / 0.08), transparent 60%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: #00e676;
+  color: #0b1220;
+}
+
+/* ---------- Retro utilities ---------- */
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+}
+
+/* Pixel grid backdrop */
+.pixel-grid {
+  background-image:
+    linear-gradient(rgb(31 41 55 / 0.55) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(31 41 55 / 0.55) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 100%);
+}
+
+/* CRT scanline overlay */
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 2px,
+    rgb(0 0 0 / 0.18) 3px,
+    rgb(0 0 0 / 0.18) 4px
+  );
+  mix-blend-mode: multiply;
+}
+
+.crt-vignette::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.55) 100%);
+  z-index: 1;
+}
+
+/* Pixel-art style borders (stepped corners) */
+.pixel-border {
+  position: relative;
+  clip-path: polygon(
+    0 8px, 4px 8px, 4px 4px, 8px 4px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 4px, calc(100% - 4px) 4px, calc(100% - 4px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 4px) calc(100% - 8px), calc(100% - 4px) calc(100% - 4px), calc(100% - 8px) calc(100% - 4px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 4px), 4px calc(100% - 4px), 4px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+}
+
+/* Neon glow text */
+.glow-green {
+  text-shadow: 0 0 8px rgb(0 230 118 / 0.6), 0 0 24px rgb(0 230 118 / 0.3);
+}
+.glow-blue {
+  text-shadow: 0 0 8px rgb(0 184 255 / 0.6), 0 0 24px rgb(0 184 255 / 0.3);
+}
+.glow-yellow {
+  text-shadow: 0 0 8px rgb(255 214 0 / 0.6), 0 0 24px rgb(255 214 0 / 0.3);
+}
+
+/* Handwritten-ish marker accent from the styleguide */
+.marker {
+  font-family: var(--font-display);
+  color: #00e676;
+  transform: rotate(-4deg);
+  display: inline-block;
+}
+
+/* Sticker card */
+.sticker {
+  @apply relative rounded-2xl border border-border bg-surface/80 backdrop-blur;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    0 10px 30px -12px rgb(0 0 0 / 0.6);
+}
+
+.sticker-hover {
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.sticker-hover:hover {
+  transform: translateY(-4px);
+  border-color: rgb(0 230 118 / 0.5);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.04),
+    0 20px 40px -16px rgb(0 230 118 / 0.25);
+}
+
+/* Terminal */
+.terminal {
+  @apply rounded-xl border border-border bg-[#070c16] font-mono text-sm;
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 30px 60px -20px rgb(0 0 0 / 0.8),
+    inset 0 0 80px rgb(0 230 118 / 0.03);
+}
+
+.cursor::after {
+  content: "▌";
+  color: #00e676;
+  animation: var(--animate-blink);
+  margin-left: 2px;
+}
+
+/* Reveal-on-scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0b1220;
+}
+::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 999px;
+  border: 2px solid #0b1220;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00e676;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
