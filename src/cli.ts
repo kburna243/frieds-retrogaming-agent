@@ -189,12 +189,8 @@ async function runChange(config: HarnessConfig, operation: string | undefined, f
     harness.close();
     return 2;
   }
-  const tool = harness.allTools.find((candidate) => candidate.operations.includes(operation));
-  const parameters = collectParameters(params, switches);
-  const answer = await harness.engine.handle({
-    tool: tool?.name ?? 'run_step',
-    args: tool && tool.name !== 'run_step' ? parameters : { operation, parameters },
-  });
+  // A person typed the name: the gate is the same, but the operation need not be one the model is offered.
+  const answer = await harness.engine.runOperation(operation, collectParameters(params, switches));
 
   if (flags.json === 'true') process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
   else if (answer.plan && answer.stage !== 'applied') process.stdout.write(`${formatPlanForHuman(answer.plan)}\n`);

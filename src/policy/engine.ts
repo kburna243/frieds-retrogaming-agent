@@ -136,7 +136,38 @@ export class PolicyEngine {
     const operation = tool.name === 'run_step' ? String(request.args.operation ?? '') : tool.operations[0];
     if (!operation) throw new PolicyError(PolicyCode.UnknownOperation, `tool ${tool.name} maps to no operation`);
     const parameters = tool.name === 'run_step' ? plainArgs(request.args.parameters) : plainArgs(request.args);
+    // A model reaches exactly the operations its tools name. run_step names the runnable steps, nothing else.
+    return this.#change(request.tool, operation, parameters, tool.operations);
+  }
 
+  /**
+   * One operation by name, for a person at the terminal (`fagent run`). The same gate as for a model — level,
+   * catalog, parameters, dry run, plan, human, apply, verify — but not limited to the operations offered as tools,
+   * because the person typing the name is the one who decides. It takes no apply or approved flag. Never throws.
+   */
+  async runOperation(operation: string, parameters: ParameterBag = {}): Promise<ToolAnswer> {
+    const label = 'fagent run';
+    try {
+      const spec = await this.#client.findOperation(operation);
+      if (!spec) throw new PolicyError(PolicyCode.UnknownOperation, `the kit has no operation ${operation}`);
+      const plain = plainArgs(parameters);
+      if (spec.Kind === 'Read') {
+        const problems = validateParameters(spec, plain);
+        if (problems.length > 0) throw new PolicyError(PolicyCode.UnknownParameter, `${operation}: ${problems.join('; ')}`);
+        const read = await this.#call({ operation, parameters: plain, anonymize: this.#anonymize }, 'read', label);
+        return { ok: read.result.Success, stage: 'read', payload: resultPayload(read.result, operation) };
+      }
+      if (this.#level === 'read-only') {
+        throw new PolicyError(PolicyCode.LevelReadOnly, `this session may only read; ${operation} would change the cabinet`);
+      }
+      return await this.#change(label, operation, plain, null);
+    } catch (error) {
+      return this.#refusal({ tool: label, args: { operation, parameters } }, error);
+    }
+  }
+
+  /** Stages 1–5 for one change. `offered` limits a model to its tools' operations; `null` is a person at the CLI. */
+  async #change(label: string, operation: string, parameters: ParameterBag, offered: readonly string[] | null): Promise<ToolAnswer> {
     const spec = await this.#client.findOperation(operation);
     if (!spec) throw new PolicyError(PolicyCode.UnknownOperation, `the kit has no operation ${operation}`);
     if (spec.Interactive) {
@@ -148,6 +179,12 @@ export class PolicyEngine {
     if (!spec.Available) {
       throw new PolicyError(PolicyCode.UnavailableOperation, `${operation} is not available in this kit version`);
     }
+    if (offered && !offered.includes(operation)) {
+      throw new PolicyError(
+        PolicyCode.NotOffered,
+        `${operation} exists in the kit but is not one of your tools; a person can run it with: fagent run ${operation}`,
+      );
+    }
     const problems = validateParameters(spec, parameters);
     if (problems.length > 0) {
       const hasUnknown = problems.some((p) => p.startsWith('unknown'));
@@ -157,11 +194,13 @@ export class PolicyEngine {
     }
 
     // Stage 1 — dry run. Always first, always without -Apply, always decided here and not by the model.
-    const dry = await this.#call({ operation, parameters, anonymize: this.#anonymize }, 'dry_run', request.tool);
+    const dry = await this.#call({ operation, parameters, anonymize: this.#anonymize }, 'dry_run', label);
     if (!dry.result.Success) {
       throw new PolicyError(
         PolicyCode.DryRunNotShownable,
         `the kit produced no plan for ${operation}: ${dry.result.Message || dry.result.Errors.join(' ')}`,
+        // What the kit says needs a person or failed, verbatim: the model has to pass the reason on, not guess it.
+        { status: dry.result.Status, warnings: dry.result.Warnings, errors: dry.result.Errors },
       );
     }
 
@@ -227,14 +266,14 @@ export class PolicyEngine {
     const applied = await this.#call(
       { operation, parameters, apply: true, approved: plan.approvals.length > 0, anonymize: this.#anonymize },
       'apply',
-      request.tool,
+      label,
     );
     this.#store.setPlanStatus(plan.planId, applied.result.Success ? 'applied' : 'failed');
 
     // Stage 5 — verify. Only the doctor measures live, so this is the answer to "did it work".
     let verification: Record<string, unknown> = { skipped: true };
     if (this.#verifyAfterApply) {
-      const after = await this.#call({ operation: 'status', parameters: {}, anonymize: this.#anonymize }, 'verify', `${request.tool}:verify`);
+      const after = await this.#call({ operation: 'status', parameters: {}, anonymize: this.#anonymize }, 'verify', `${label}:verify`);
       verification = { status: after.result.Status, summary: after.result.Data?.Summary ?? null, message: after.result.Message };
     }
 

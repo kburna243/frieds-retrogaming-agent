@@ -76,6 +76,23 @@ describe('the catalog, and only the catalog, decides what is a tool', () => {
     expect(snapshot.ApiVersion).toBe('1.0');
   });
 
+  it('every operation the fake offers has the real kind, availability and parameters', () => {
+    // A fake that answers with other parameters than the kit would let a test pass that fails on the cabinet.
+    type Spec = { Name: string; Kind: string; Interactive: boolean; Available: boolean; Parameters: Array<{ Name: string; Type: string; Mandatory: boolean }> };
+    const shape = (op: Spec) => ({
+      Kind: op.Kind,
+      Interactive: op.Interactive,
+      Available: op.Available,
+      Parameters: op.Parameters.map((p) => `${p.Name}:${p.Type}${p.Mandatory ? '*' : ''}`).sort(),
+    });
+    const real = new Map((snapshot.Operations as Spec[]).map((op) => [op.Name, op]));
+    for (const op of fakeCatalog()) {
+      const pinned = real.get(op.Name);
+      expect(pinned, op.Name).toBeDefined();
+      expect(shape(op), op.Name).toEqual(shape(pinned!));
+    }
+  });
+
   it('the snapshot never exposes a denied parameter or a non-plain type', () => {
     const denied = new Set(['Approve', 'StatePath', 'Culture', 'KitUserSid', 'TrustedOwner', 'TaskPrefix', 'AutomationDir', 'LayersKey', 'RegistryRoots', 'AppCompatRoots', 'AnswerFile', 'WhatIf', 'Confirm', 'Devices', 'Monitors', 'Tasks', 'XInputReader']);
     const allowedTypes = /^(String|String\[\]|Int32|Int64|Boolean|switch)$/;

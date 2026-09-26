@@ -2,6 +2,7 @@
 export const PolicyCode = {
   LevelReadOnly: 'LEVEL_READ_ONLY',
   UnknownOperation: 'UNKNOWN_OPERATION',
+  NotOffered: 'NOT_OFFERED',
   UnavailableOperation: 'UNAVAILABLE_OPERATION',
   InteractiveStep: 'INTERACTIVE_STEP',
   ParamNotPlain: 'PARAM_NOT_PLAIN',
@@ -41,6 +42,7 @@ export class PolicyError extends Error {
 const HINTS: Record<string, string> = {
   [PolicyCode.LevelReadOnly]: 'this session is read-only; start with --level operator to allow changes',
   [PolicyCode.UnknownOperation]: 'pick an operation from the tool description or from cabinet_operations',
+  [PolicyCode.NotOffered]: 'this operation is not one of your tools; tell the user the fagent run command instead of calling it',
   [PolicyCode.UnavailableOperation]: 'the kit reports this operation as not available in its current version',
   [PolicyCode.InteractiveStep]: 'this step needs a person at the cabinet — tell the user to run it in the kit wizard',
   [PolicyCode.ParamNotPlain]: 'only strings, numbers, booleans and arrays of strings are accepted',
