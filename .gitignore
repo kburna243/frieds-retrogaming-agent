@@ -1,0 +1,36 @@
+# Build output and dependencies
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Runtime data — sessions, messages, tool calls, plans and approvals live here and never in the kit
+.harness/
+data/
+*.db
+*.db-wal
+*.db-shm
+
+# Local configuration and secrets (never commit)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs and temporary files
+*.log
+logs/
+tmp/
+.tmp/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Agent scratch
+.omc/
+
+# Anything that smells like a real machine: keep personal paths out of the repository
+fixtures-local/

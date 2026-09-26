@@ -1,0 +1,598 @@
+{
+  "ApiVersion": "1.0",
+  "Source": {
+    "repository": "frieds-retrogaming-kit",
+    "url": "https://github.com/kburna243/frieds-retrogaming-kit",
+    "branch": "origin/main",
+    "commit": "c019818773041d8405faf861425ca6d8a61cbc53",
+    "kitVersion": "0.2.0",
+    "fetched": "2026-09-26"
+  },
+  "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
+  "Operations": [
+    {
+      "Name": "backup.check",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Checks a backup against its checksums (zip) or its original (file copy).",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "backup.export",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Copies a backup to a folder and records its SHA-256.",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Destination",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "backup.restore",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Restores a backup; the current file is saved first. Zip backups need AllowedRoot.",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "AllowedRoot",
+          "Type": "String[]",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "backups.list",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "The kit's backups, newest first.",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String[]",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "components",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detected components: Windows, RetroBat, Gunmote, ViGEmBus, DolphinBar, Steam, pinball build.",
+      "Parameters": []
+    },
+    {
+      "Name": "operations",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "This catalog.",
+      "Parameters": []
+    },
+    {
+      "Name": "profile.export",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": false,
+      "Description": "Cabinet migration: not available yet (profileexport arrives with v0.3).",
+      "Parameters": []
+    },
+    {
+      "Name": "profile.import",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": false,
+      "Description": "Cabinet migration: not available yet (profileimport arrives with v0.3).",
+      "Parameters": []
+    },
+    {
+      "Name": "status",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Health check of system, pinball, lightgun and security (doctor).",
+      "Parameters": []
+    },
+    {
+      "Name": "step.lightgun.01-detect",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 1: detect RetroBat (emulationstation\\emulationstation.exe and",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.02-hardware",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 2 (check only, changes nothing): DolphinBar in Mode 4 (USB\\VID_057E&PID_0306; Mode 1/2 and",
+      "Parameters": []
+    },
+    {
+      "Name": "step.lightgun.03-vigembus",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 3: ViGEmBus (virtual Xbox 360 pads). Detected by service and uninstall entry. When missing and",
+      "Parameters": [
+        {
+          "Name": "AllowInstall",
+          "Type": "switch",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.04-gunmote",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 4 (guided): Gunmote. The user downloads and installs Gunmote from the official releases",
+      "Parameters": [
+        {
+          "Name": "GunmotePath",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.05-interference",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 5: interference.",
+      "Parameters": [
+        {
+          "Name": "SteamPath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "DisableVMultiGuard",
+          "Type": "switch",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.06-gunmotelayouts",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 6: Gunmote layouts from the kit's own templates (menu pad without pointer as Default, pad 4:3,",
+      "Parameters": [
+        {
+          "Name": "GunmotePath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Mode",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.07-retrobatsettings",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 7: RetroBat settings.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.08-profileautomation",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 8 [W7]: profile automation.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.09-verify",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": true,
+      "Available": false,
+      "Description": "Lightgun step 9: measured checks instead of guessing (changes nothing on the system).",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "XInputTimeoutSeconds",
+          "Type": "Int32",
+          "Mandatory": false
+        },
+        {
+          "Name": "Again",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "ProfileLog",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.10-teknoparrot",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 10 [W8]: TeknoParrot profiles.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Exclude",
+          "Type": "String[]",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.11-gamelists",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 11 [W8]: game lists.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.12-demul",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 12: Demul & DemulShooter (Naomi & Atomiswave lightgun support).",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "DemulShooterPath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RemoveHardwired",
+          "Type": "switch",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.13-model2supermodel",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 13: Model 2 & Supermodel (Sega Model 2 and Model 3 lightgun setup).",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.14-duckstationpcsx2",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 14 [W6]: DuckStation & PCSX2 guided check and report (no automated binding).",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.01-detect",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 1: detect the build (vPinball\\PinUPSystem\\PUPDatabase.db), check the database schema,",
+      "Parameters": [
+        {
+          "Name": "Source",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.02-target",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 2: validate the target root (local drive, not inside the source build,",
+      "Parameters": [
+        {
+          "Name": "TargetRoot",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.03-dependencies",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 3: detect VC++ 2005-2022 x86/x64, .NET 3.5/4.8, DirectX 9 (d3dx9_43.dll) and the Windows",
+      "Parameters": [
+        {
+          "Name": "AllowDownload",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "AllowDism",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.04-copy",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 4: copy vPinball and the detected sibling folders from the source root to the target root",
+      "Parameters": [
+        {
+          "Name": "Update",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "Threads",
+          "Type": "Int32",
+          "Mandatory": false
+        },
+        {
+          "Name": "LogPath",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.05-relocate",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 5: rewrite the build paths from the old root to the new root (database, text files,",
+      "Parameters": [
+        {
+          "Name": "Mode",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RegistryBackup",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "OldUserHive",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "NewRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "OldRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.06-register",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 6: register the COM servers of the build (VPinMAME, B2S, FlexDMD, PUPDMDControl,",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.07-fpbamsetup",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 7: Future Pinball / BAM first-time setup.",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "ConfirmFpLoaderAdminRun",
+          "Type": "switch",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.08-screens",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": true,
+      "Available": false,
+      "Description": "Pinball step 8: screens. Captures the monitors (DPI aware), checks the official layout rules",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Mode",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "BackupDir",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.pinball.09-finish",
+      "Kind": "Change",
+      "Suite": "pinball",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Pinball step 9: finish. Final kit backup (ZIP with manifest: Popper database, INIs, ScreenRes, VPX",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "EnableAutostart",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "BackupDir",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RegistryKeys",
+          "Type": "String[]",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "support.bundle",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Writes an anonymized support bundle (doctor, environment, step states, logs).",
+      "Parameters": [
+        {
+          "Name": "Destination",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    }
+  ]
+}

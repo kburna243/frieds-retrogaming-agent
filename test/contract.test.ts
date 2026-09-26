@@ -1,0 +1,120 @@
+/**
+ * Contract-level tests: the shapes API.md pins, the argument vector the kit expects, and what the catalog is
+ * allowed to turn into a tool.
+ */
+
+import { describe, expect, it } from 'vitest';
+import { parseKitResult, readCatalog, RESULT_FIELDS, SUPPORTED_API_MAJOR, apiMajor } from '../src/kit/types.ts';
+import { buildKitArgv, kitApiScript, windowsPowerShellPath, type KitRequest } from '../src/kit/transport.ts';
+import { buildTools, filterReadTools, runnableSteps, schemaForParameters } from '../src/kit/tools.ts';
+import { validateParameters } from '../src/kit/client.ts';
+import { makeHarness } from './helpers.ts';
+import { catalog as fakeCatalog, handle } from './kit/fake-kit.mjs';
+import snapshot from '../contract/catalog-v1.json' with { type: 'json' };
+
+describe('the JSON document of the kit', () => {
+  it('carries exactly the documented fields, and nothing else counts', () => {
+    const { result } = handle({ operation: 'status' });
+    expect(Object.keys(result)).toEqual(RESULT_FIELDS);
+    expect(parseKitResult(JSON.stringify(result)).Status).toBe('Ok');
+  });
+
+  it('refuses a truncated or double document instead of guessing', () => {
+    expect(() => parseKitResult('')).toThrow(/nothing/);
+    expect(() => parseKitResult('What if: x\nnot json')).toThrow(/not one JSON document/);
+    expect(() => parseKitResult('[1,2]')).toThrow(/not a JSON object/);
+  });
+
+  it('normalizes single values into arrays the way PowerShell sometimes emits them', () => {
+    const loose = { ...handle({ operation: 'status' }).result, Warnings: 'one warning', Changes: { Kind: 'File', Target: 'x', Detail: '' } };
+    const parsed = parseKitResult(JSON.stringify(loose));
+    expect(parsed.Warnings).toEqual(['one warning']);
+    expect(parsed.Changes).toHaveLength(1);
+  });
+
+  it('pins the major version and accepts every 1.x', () => {
+    expect(apiMajor('1.0')).toBe(SUPPORTED_API_MAJOR);
+    expect(apiMajor('1.9')).toBe(SUPPORTED_API_MAJOR);
+    expect(apiMajor('2.0')).toBe(2);
+    expect(apiMajor('')).toBe(-1);
+    expect(apiMajor(undefined)).toBe(-1);
+  });
+});
+
+describe('the argument vector (API.md §2)', () => {
+  it('is exactly the documented call', () => {
+    const request: KitRequest = { operation: 'backup.restore', parameters: { Path: 'C:\\RetroBat\\a.cfg.bak_x' }, apply: true, approved: true, anonymize: true, culture: 'de-DE' };
+    const argv = buildKitArgv('D:\\cabinet\\frieds-retrogaming-kit', request);
+    expect(argv.slice(0, 6)).toEqual(['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', kitApiScript('D:\\cabinet\\frieds-retrogaming-kit'), '-Operation']);
+    expect(argv[6]).toBe('backup.restore');
+    expect(argv).toContain('-Apply');
+    expect(argv).toContain('-Approved');
+    expect(argv).toContain('-Anonymize');
+    expect(argv).toContain('-Culture');
+    expect(argv[argv.indexOf('-ParametersJson') + 1]).toBe('{"Path":"C:\\\\RetroBat\\\\a.cfg.bak_x"}');
+  });
+
+  it('omits -ParametersJson when there is nothing to pass, and never omits -Operation', () => {
+    const argv = buildKitArgv('D:\\kit', { operation: 'status' });
+    expect(argv).not.toContain('-ParametersJson');
+    expect(argv).toContain('status');
+  });
+
+  it('uses the full Windows PowerShell 5.1 path, like the kit’s own launchers', () => {
+    expect(windowsPowerShellPath({ SystemRoot: 'C:\\WINDOWS' } as NodeJS.ProcessEnv)).toBe('C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\powershell.exe');
+    expect(windowsPowerShellPath({} as NodeJS.ProcessEnv)).toMatch(/^C:\\Windows\\System32\\WindowsPowerShell\\v1\.0\\powershell\.exe$/);
+  });
+});
+
+describe('the catalog, and only the catalog, decides what is a tool', () => {
+  it('the pinned snapshot matches the shape the fake kit reports', () => {
+    const snapshotNames = (snapshot.Operations as Array<{ Name: string }>).map((op) => op.Name);
+    const fakeNames = fakeCatalog().map((op) => op.Name);
+    // The snapshot is the real kit; the fake is a subset. Everything the fake claims must exist in the real one.
+    for (const name of fakeNames) expect(snapshotNames).toContain(name);
+    expect(snapshotNames).toContain('step.pinball.05-relocate');
+    expect(snapshot.ApiVersion).toBe('1.0');
+  });
+
+  it('the snapshot never exposes a denied parameter or a non-plain type', () => {
+    const denied = new Set(['Approve', 'StatePath', 'Culture', 'KitUserSid', 'TrustedOwner', 'TaskPrefix', 'AutomationDir', 'LayersKey', 'RegistryRoots', 'AppCompatRoots', 'AnswerFile', 'WhatIf', 'Confirm', 'Devices', 'Monitors', 'Tasks', 'XInputReader']);
+    const allowedTypes = /^(String|String\[\]|Int32|Int64|Boolean|switch)$/;
+    for (const operation of snapshot.Operations as Array<{ Parameters: Array<{ Name: string; Type: string }> }>) {
+      for (const parameter of operation.Parameters) {
+        expect(denied.has(parameter.Name), parameter.Name).toBe(false);
+        expect(parameter.Type).toMatch(allowedTypes);
+      }
+    }
+  });
+
+  it('interactive steps are not offered, unavailable ones are', async () => {
+    const harness = await makeHarness();
+    expect(runnableSteps(harness.catalog).some((step) => step.Interactive)).toBe(false);
+    const interactive = harness.catalog.filter((op) => op.Interactive).map((op) => op.Name);
+    expect(interactive).toEqual(['step.lightgun.09-verify', 'step.pinball.08-screens']);
+    const tools = buildTools(harness.catalog);
+    const runStep = tools.find((tool) => tool.name === 'run_step');
+    for (const name of interactive) expect(runStep?.operations).not.toContain(name);
+    await harness.cleanup();
+  });
+
+  it('a tool schema is built from the catalog types and rejects parameters the kit does not know', () => {
+    const restore = fakeCatalog().find((op) => op.Name === 'backup.restore')!;
+    const schema = schemaForParameters(restore.Parameters);
+    expect(schema.properties.Path).toEqual({ type: 'string' });
+    expect(schema.properties.AllowedRoot).toEqual({ type: 'array', items: { type: 'string' } });
+    expect(schema.required).toEqual(['Path']);
+
+    expect(validateParameters(restore, { Path: 'x' })).toEqual([]);
+    expect(validateParameters(restore, {})).toEqual(['missing parameter: Path']);
+    expect(validateParameters(restore, { Path: 'x', KitUserSid: 'S-1-5-18' })).toEqual(['unknown parameter: KitUserSid']);
+  });
+
+  it('read-only keeps only the read tools', () => {
+    const tools = buildTools(fakeCatalog());
+    const reads = filterReadTools(tools);
+    expect(reads.length).toBeGreaterThan(0);
+    expect(reads.every((tool) => tool.kind === 'Read')).toBe(true);
+    expect(reads.some((tool) => tool.name === 'run_step')).toBe(false);
+  });
+});

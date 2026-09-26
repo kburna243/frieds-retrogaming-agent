@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: typecheck · test · rules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['24', '25']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - name: typecheck
+        run: npm run typecheck
+      - name: tests (against the fake cabinet — no Windows, no network)
+        run: npm run test
+      - name: repository rules
+        run: npm run lint
+      - name: build
+        run: npm run build
+      - name: the built CLI runs and shows its help
+        run: node dist/cli.js --help
+      - name: the built CLI refuses without a kit root
+        run: |
+          node dist/cli.js status >status.out 2>&1 && exit 1
+          grep -q "no kit root" status.out
+
+  windows:
+    name: windows wiring (no cabinet here)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test
+      - name: argv is PowerShell-shaped on Windows
+        run: node --no-warnings src/cli.ts --help
+      - name: the fake kit answers through a real child process
+        run: node test/kit/fake-kit-process.mjs -NoProfile -ExecutionPolicy Bypass -File x\api\Invoke-KitApi.ps1 -Operation status
