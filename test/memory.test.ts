@@ -113,6 +113,10 @@ describe('memory (M1)', () => {
     await second.cleanup();
   });
 
+  // Eight evenings of it, because the claim is about size and not about time. This is the slowest test in the
+  // repository: ~0.6 s alone, ~1.6 s with the suite, and on the Windows CI runner it timed out at the 5 s default
+  // twice (2026-09-26, runs 36219927511 and 36221260917; the Linux jobs passed the same minute). A budget for this
+  // one test rather than a raised global timeout, so a test that genuinely hangs is still a fast failure.
   it('is fixed-size, however much history there is', async () => {
     let dbPath: string | undefined;
     for (let evening = 0; evening < 8; evening += 1) {
@@ -133,7 +137,7 @@ describe('memory (M1)', () => {
     // Five sessions at most, whatever the database holds.
     expect(digest!.split('\n').filter((line) => line.startsWith('- 2')).length).toBeLessThanOrEqual(5);
     await last.cleanup();
-  });
+  }, 20_000);
 
   it('for a cloud model it only carries anonymized kit text and nothing that looks personal', async () => {
     const first = await makeHarness();

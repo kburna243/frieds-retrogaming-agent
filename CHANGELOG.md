@@ -111,11 +111,18 @@ on the real one.
   temporary git worktree of the pinned commit) instead of rebuilding it from a hand-written list, which had missed
   `backup.remove` and the `profile.*` parameters of kit 0.3.0. `-KitRoot` is now mandatory; the old default was a
   real local path.
+- The memory size test timed out on the Windows CI runner — twice on `main`, at vitest's 5 s default, while the Linux
+  jobs passed the same minute. It has its own budget now and the global default stays short, so a test that genuinely
+  hangs is still a loud, early failure.
 
 ### Known gaps
 
-- M5 (scenarios as an eval folder) is open. A single chat with a real local model worked on the cabinet
-  (`docs/LIVE-RUN-REPORT.md`), but there is no repeatable eval yet.
+- A small local model reaches the ideal route in none of the three scenarios, and no scenario has run against a
+  cabinet's own model choice yet. The gate holding regardless is this repository's responsibility; "does the harness
+  solve a cabinet problem" stays a person's measurement, on the cabinet, with `eval/run.ts`.
+- Nothing here has been measured against a *real* kit since ApiVersion 1.1. The snapshot is from kit 0.3.1 and
+  everything ran against the fake cabinet in `test/kit/`, which speaks 1.1 too. The first `fagent doctor` on the
+  cabinet is what closes that, and it needs no model and changes nothing.
 
 ## 0.1.0 — first release of the harness
 
