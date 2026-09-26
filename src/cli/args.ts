@@ -20,7 +20,7 @@ export interface Parsed {
 }
 
 /** Flags that never take a value. */
-const BOOLEAN = new Set(['json', 'help', 'demo', 'no-anonymize', 'verbose']);
+const BOOLEAN = new Set(['json', 'help', 'demo', 'no-anonymize', 'no-memory', 'verbose']);
 
 export function parseArgs(argv: readonly string[]): Parsed {
   const flags: Flags = {};
@@ -91,6 +91,7 @@ Common flags
   --model <name>                                                 (env FAGENT_MODEL / FAGENT_CLOUD_MODEL)
   --base-url <url>                                               (env FAGENT_OLLAMA_URL / FAGENT_CLOUD_BASE_URL)
   --no-anonymize    local model only: keep real paths in the plan (default: always -Anonymize)
+  --no-memory       chat only: start without the digest of earlier sessions
   --json            machine-readable output
   --demo            no model at all: a scripted one runs the diagnosis order so you can see the flow
 

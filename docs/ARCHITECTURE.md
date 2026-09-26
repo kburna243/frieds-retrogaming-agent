@@ -75,7 +75,9 @@ ranges, e-mails, key-shaped strings) with an allowlist for CI service accounts s
 
 ### `src/agent/`
 
-`prompt.ts` is the system prompt with the hard rules; `loop.ts` is eight rounds of "model asks, gate answers", with
+`prompt.ts` is the system prompt with the hard rules; `memory.ts` builds the digest of earlier sessions that is
+appended to it (history in a fixed number of lines, built only from the database, never read by the gate — a
+remembered yes is not an approval); `loop.ts` is eight rounds of "model asks, gate answers", with
 every message and every tool call logged. It ends when the model answers without a tool call, or when the round
 budget runs out — never when a change was applied, because applying is not the same as being done.
 
@@ -98,8 +100,9 @@ thing left for the cabinet is `tools/Start-SmokeTest.ps1`.
 
 ## Deliberate gaps
 
-- **No MCP server yet.** The kit's ROADMAP lists it as not done. The seam exists; `src/kit/mcp-transport.ts` is the
-  file to write when the kit ships a server. Until then, one-shot stdio is the transport.
+- **No MCP transport yet.** The kit ships an MCP server since v0.3.0. The seam exists; `src/kit/mcp-transport.ts` is
+  the file to write. Its tools take `apply`/`approved`, so the transport maps `KitRequest` onto them and the model
+  never sees them. Until then, one-shot stdio is the transport.
 - **No `apply`/`approved` in any public API on purpose.** There is no exported function that takes a boolean to
   skip the gate. If someone adds one, `tools/check-repo-rules.mjs` and the acceptance tests are the reviewers.
 - **One schema, no migration runner.** Version the table before shipping this on a second cabinet.

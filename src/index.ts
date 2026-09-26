@@ -60,4 +60,5 @@ export { assertSafeForCloud, findPersonalData, type PersonalDataFinding } from '
 
 export { AgentLoop, type AgentEvent, type AgentLoopOptions, type AgentRun } from './agent/loop.ts';
 export { systemPrompt } from './agent/prompt.ts';
+export { buildMemoryDigest, MEMORY_HEADER, type MemoryOptions } from './agent/memory.ts';
 export { main } from './cli.ts';

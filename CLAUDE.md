@@ -23,7 +23,7 @@ You are working on **frieds-retrogaming-agent**, the agent harness that drives a
 ```bash
 npm install          # dev deps only; there are no runtime dependencies
 npm run check        # typecheck + vitest + repo rule checker — this is the bar
-npm run test         # vitest run (47 tests, no network, no Windows needed)
+npm run test         # vitest run (74 tests, no network, no Windows needed)
 npm run typecheck    # tsc -p tsconfig.json (noEmit)
 npm run build        # tsc -p tsconfig.build.json + copy db/schema.sql to dist/
 npm run lint         # node tools/check-repo-rules.mjs

@@ -45,6 +45,8 @@ export interface FixtureOptions {
   state?: Record<string, unknown>;
   apiVersion?: string;
   verifyAfterApply?: boolean;
+  /** Reuse an existing database: a second session on the same cabinet memory. */
+  dbPath?: string;
 }
 
 const directories: string[] = [];
@@ -52,7 +54,7 @@ const directories: string[] = [];
 export async function makeHarness(options: FixtureOptions = {}): Promise<HarnessFixture> {
   const directory = mkdtempSync(join(tmpdir(), 'fagent-test-'));
   directories.push(directory);
-  const dbPath = join(directory, 'harness.db');
+  const dbPath = options.dbPath ?? join(directory, 'harness.db');
 
   const transport = new FakeKitTransport({
     ...(options.state ? { state: options.state } : {}),

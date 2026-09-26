@@ -12,13 +12,14 @@ without the cabinet.
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test |
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'` |
+| Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing (tested) |
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
-| CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere |
+| CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation | works, cross-checked against the pinned snapshot |
-| Tests | **68 passed**, 5 files, no network, no Windows, ~2 s |
+| Tests | **74 passed**, 6 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 56 files |
-| Pinned contract (`contract/`) | kit 0.2.0, commit `c0198187…`, ApiVersion 1.0; identical to the live catalog when compared with `tools/Test-ContractDrift.ps1` |
+| Pinned contract (`contract/`) | kit 0.2.0, commit `c0198187…`, ApiVersion 1.0. **Behind:** the kit is at 0.3.0 (see below) |
 
 Checked on a real Windows machine against a real kit: `status` read the doctor live; a step whose precondition was not
 met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOWNABLE`) instead of asking to apply;
@@ -26,6 +27,28 @@ met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOW
 `yes` instead wrote the bundle, reported `applied: Done` and verified with a fresh `status` — which is also how the
 read-only bug in the table above was found: the refusal was safe but said `UNKNOWN_OPERATION`, and a rule should never
 sound like a missing feature.
+
+## The kit moved: v0.3.0
+
+Compared by reading the kit's repository (not the cabinet), between `c019818` (our snapshot) and `7e7d546`
+(release v0.3.0):
+
+- **New operation `backup.remove`** (Change, `Path`). Not in `contract/`, not in the fake cabinet, not offered as a
+  tool. Decide whether it gets a fixed tool (it deletes one kit backup, nothing else) or stays reachable only
+  through `fagent run`.
+- **`profile.import` / `profile.export` are stricter:** a command without its own `-WhatIf` is not run at all without
+  `-Apply` (the dry run returns the call), `NeedsUser`/`Failed` rows land in `Warnings`/`Errors`, and `AutoInstall`
+  is refused unless the command takes `-Approve`. The fake cabinet should learn this before a test relies on it.
+- **An MCP server** (`api\Start-KitMcpServer.ps1`, stdio, JSON-RPC 2.0). This unblocks M4. Its tools take `apply`
+  and `approved` as booleans, so they must never be handed to the model as they are: the MCP transport sits behind
+  `KitTransport`, and only `PolicyEngine` fills those two fields. Results are anonymized unless the server is started
+  with `-NoAnonymize`.
+- **`ApiVersion` is still `1.0`** although an operation was added. That is the kit's to fix; the issue text is in
+  [KIT-REQUESTS.md](KIT-REQUESTS.md).
+
+Order: refresh `contract/` on the cabinet first (`tools\Test-ContractDrift.ps1`, then
+`tools\Update-ContractSnapshot.ps1`), then bring `test/kit/fake-kit.mjs` to the new snapshot — `test/contract.test.ts`
+will tell you exactly where it differs.
 
 ## The acceptance criteria from the handoff, and where they are proven
 
@@ -51,15 +74,17 @@ All seven are `test/acceptance.test.ts`, and all seven pass here on Windows and 
 
 Not oversights — decisions, each with its reason.
 
-- **No MCP server.** The kit's roadmap lists it as not done. The seam exists (`KitTransport`), so `src/kit/mcp-transport.ts`
-  is an addition, not a refactor. Do not invent a protocol on this side.
-- **Memory is written but not read back.** `Store.recentSessions()` and `recentToolCalls()` exist; nothing feeds them
-  into a prompt yet. That is M1 below and it is the most valuable open piece.
+- **No MCP transport yet.** The kit ships its server since v0.3.0 (see above). The seam exists (`KitTransport`), so
+  `src/kit/mcp-transport.ts` is an addition, not a refactor. Follow the kit's `API.md`; do not invent protocol on
+  this side.
+- **Memory is a digest, not a search.** `src/agent/memory.ts` summarizes the last five sessions into the system
+  prompt (M1). There is no retrieval by topic and no memory tool for the model; add one only if a real conversation
+  shows the digest is not enough. `recentToolCalls()` is still unused — the digest reads per session.
 - **No packaging yet.** `dist/` builds and `fagent` works from source; an installed global command, `--version`, and
   completion are M2.
 - **`kitVersion` is always `null` in a session row.** API v1 does not report it, and reading `VERSION` from the kit's
-  folder would cross the boundary. If you want it, open an issue on the kit asking `status` or `operations` to carry
-  it — do not work around it here.
+  folder would cross the boundary. The request to the kit is written up in [KIT-REQUESTS.md](KIT-REQUESTS.md) — do
+  not work around it here.
 - **No schema migrations.** One schema, one version. Add the migration runner before a second cabinet installs an
   older database.
 
@@ -70,7 +95,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 68 tests + repo rules — this is the bar
+npm run check        # typecheck + 74 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -88,7 +113,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 68 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 74 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -105,23 +130,20 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 68 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 74 passing tests. If anything fails, fix that
 before you start.
 
-Then do milestone M1 from docs/HANDOFF.md: make the stored memory useful. A new session should start from a
-compact digest of the previous sessions and the tool calls that mattered — Store.recentSessions() and
-Store.recentToolCalls() already exist and are unused. Requirements: the digest is built locally and only ever
-from what is already in the database (anonymized text stays anonymized), it is a fixed-size summary rather than
-a transcript, it goes into the system prompt or a single extra message, and it must not smuggle a
-recommendation past the gate: a remembered plan is not an approval. Add tests: one that proves a second session
-sees what the first one did, one that proves a remembered approval grants nothing.
+Then do milestone M2 from ROADMAP.md: packaging. `npm i -g .` followed by `fagent doctor` must work from any
+folder; dist/ must be complete (schema.sql included); `fagent --version` prints the harness version from
+package.json; the CI job that already runs the built CLI must cover it. No new runtime dependency, and the
+installed command must still have no --yes.
 
-Finish by updating docs/HANDOFF.md (state table, and move M1 out of "next") and CHANGELOG.md, then
+Finish by updating docs/HANDOFF.md (state table, and move M2 out of "next") and CHANGELOG.md, then
 `npm run check` again. Report which commands you ran and what they printed. Do not push.
 ```
 
-Repeat the last paragraph with a different milestone (M2 packaging, M3 terminal UX, M4 MCP transport once the kit
-ships its server, M5 scenarios, M6 report mode) and the same block works again.
+Repeat the last paragraph with a different milestone (M3 terminal UX, M4 MCP transport — the kit ships its server
+since v0.3.0, M5 scenarios, M6 report mode) and the same block works again. M1 (memory) is done.
 
 ## What only a human can do
 
@@ -131,8 +153,9 @@ Neither here nor in any cloud session:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
 2. Run one change through the gate for real, type `yes`, and look at what the kit wrote and at `fagent history`.
 3. Run `tools\Test-ContractDrift.ps1` after the kit releases, and refresh `contract/` with
-   `tools\Update-ContractSnapshot.ps1` when it drifted.
-4. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
+   `tools\Update-ContractSnapshot.ps1` when it drifted. **Due now:** the kit is at 0.3.0, the snapshot at 0.2.0.
+4. File the two issues in [KIT-REQUESTS.md](KIT-REQUESTS.md) on the kit's repository.
+5. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
 
 ## Who owns what
 

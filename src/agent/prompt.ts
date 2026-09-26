@@ -11,6 +11,8 @@ export function systemPrompt(input: {
   kitVersion?: string | null;
   apiVersion?: string | null;
   culture: 'en-US' | 'de-DE';
+  /** The digest of earlier sessions (`buildMemoryDigest`), or nothing on a first run. */
+  memory?: string | null;
 }): string {
   const language = input.culture === 'de-DE' ? 'Answer in German.' : 'Answer in English.';
   return `You are Fried's retro-gaming cabinet agent. You help one person run and repair one Windows cabinet: a virtual
@@ -45,5 +47,5 @@ HARD RULES
 - Be concrete and short. A cabinet owner wants the next action, not an essay.
 
 SESSION
-kit: ${input.kitVersion ?? 'unknown'} · api: ${input.apiVersion ?? 'unknown'} · provider: ${input.model.provider} (${input.model.model}) · level: ${input.level}`;
+kit: ${input.kitVersion ?? 'unknown'} · api: ${input.apiVersion ?? 'unknown'} · provider: ${input.model.provider} (${input.model.model}) · level: ${input.level}${input.memory ? `\n\n${input.memory}` : ''}`;
 }

@@ -11,6 +11,7 @@ import type { ModelGateway, ChatMessage } from '../llm/gateway.ts';
 import type { ToolDefinition } from '../kit/tools.ts';
 import type { PolicyEngine } from '../policy/engine.ts';
 import { systemPrompt } from './prompt.ts';
+import { buildMemoryDigest } from './memory.ts';
 import type { Store } from '../db/store.ts';
 
 export interface AgentLoopOptions {
@@ -23,6 +24,8 @@ export interface AgentLoopOptions {
   kitVersion?: string | null;
   apiVersion?: string | null;
   maxRounds?: number;
+  /** Start from a digest of earlier sessions (default true). `false` starts with no memory at all. */
+  memory?: boolean;
   /** Called for every assistant text and every tool answer, so the CLI can show what is happening. */
   onEvent?: (event: AgentEvent) => void;
 }
@@ -64,6 +67,13 @@ export class AgentLoop {
           culture: this.#o.culture,
           kitVersion: this.#o.kitVersion,
           apiVersion: this.#o.apiVersion,
+          memory:
+            this.#o.memory === false
+              ? null
+              : buildMemoryDigest(this.#o.store, {
+                  currentSessionId: this.#o.sessionId,
+                  anonymizeRequired: this.#o.gateway.info.anonymizeRequired,
+                }),
         }),
       });
       this.#o.store.addMessage({ sessionId: this.#o.sessionId, role: 'system', content: this.#history[0]?.content ?? null, anonymized: this.#o.gateway.info.anonymizeRequired });

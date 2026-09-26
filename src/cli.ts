@@ -218,6 +218,7 @@ async function runChat(config: HarnessConfig, flags: Flags): Promise<number> {
     culture: config.culture,
     apiVersion: harness.client.apiVersion,
     kitVersion: harness.kitVersion,
+    memory: flags['no-memory'] !== 'true',
     onEvent: (event) => {
       if (flags.json === 'true') return;
       if (event.type === 'assistant' && event.text) process.stdout.write(`\n${event.text}\n`);
