@@ -81,6 +81,7 @@ Usage
   fagent run <operation> [--param K=V] [--flag K]   one operation through the full gate (dry run → plan → your yes → apply → verify)
   fagent chat [--message "..."] [--demo] talk to the cabinet with a model
   fagent history [--last 20]             what this harness did, from its own database
+  fagent report [--since 7d] [--json]    a summary of that period for a person; reads the database, never the kit
   fagent version                         the harness version (also --version)
 
 Common flags

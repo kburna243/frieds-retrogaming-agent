@@ -5,7 +5,7 @@ The harness version is ours; the kit's contract is theirs. Nothing here asks the
 ## Now (0.1)
 
 Working: kit client, live-catalog tools, the policy gate, SQLite memory, CLI, model gateways with the anonymize
-guard, the fake cabinet and 110 tests. Unreleased: memory read back into a new session (M1), packaging (M2), the MCP transport (M4) and schema migrations. See `docs/HANDOFF.md` for the state in more honest detail.
+guard, the fake cabinet and 116 tests. Unreleased: memory read back into a new session (M1), packaging (M2), the MCP transport (M4), the report mode (M6) and schema migrations. See `docs/HANDOFF.md` for the state in more honest detail.
 
 ## Next
 
@@ -13,7 +13,6 @@ guard, the fake cabinet and 110 tests. Unreleased: memory read back into a new s
 | --- | --- | --- |
 | M3 | **Better model UX in the terminal** | Streaming where the endpoint supports it, a token/round budget that is visible, `fagent chat --continue`, `--json` for every command. |
 | M5 | **Scenarios** | A small eval folder: "gun does not work in game X", "pinball build to a second drive", "what changed since yesterday". Run against the fake cabinet with a real local model, asserting the *call order*, not the prose. |
-| M6 | **Read-only report mode** | `fagent report --since 7d` builds a human summary from the audit trail (no kit writes), for the vault. |
 
 ## Later, if it earns it
 

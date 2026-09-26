@@ -246,6 +246,21 @@ export class Store {
       .all(limit) as Array<Record<string, unknown>>;
   }
 
+  /** Everything logged since a point in time, oldest first — the raw material of `fagent report`. */
+  sessionsSince(since: string): Array<Record<string, unknown>> {
+    return this.#db.prepare('SELECT * FROM sessions WHERE started_at >= ? ORDER BY started_at').all(since) as Array<Record<string, unknown>>;
+  }
+
+  toolCallsSince(since: string): Array<Record<string, unknown>> {
+    return this.#db
+      .prepare('SELECT * FROM tool_calls WHERE created_at >= ? ORDER BY created_at, rowid')
+      .all(since) as Array<Record<string, unknown>>;
+  }
+
+  plansSince(since: string): Array<Record<string, unknown>> {
+    return this.#db.prepare('SELECT * FROM plans WHERE created_at >= ? ORDER BY created_at').all(since) as Array<Record<string, unknown>>;
+  }
+
   recentSessions(limit: number): Array<Record<string, unknown>> {
     return this.#db
       .prepare('SELECT * FROM sessions ORDER BY started_at DESC LIMIT ?')

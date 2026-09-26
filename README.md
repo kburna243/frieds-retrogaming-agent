@@ -27,7 +27,8 @@
 > **Status: v0.1.0**, verified against a real kit on a Windows cabinet. The client, the policy gate, the SQLite
 > memory, the CLI and the full test suite work. New and not yet released: a new session starts from a digest of the
 > earlier ones (M1), the kit's MCP server can be used as transport (M4, not yet run on a cabinet), `npm i -g .`
-> installs `fagent` (M2), and the database migrates itself. Open: a complete catalog snapshot of kit v0.3.0. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> installs `fagent` (M2), `fagent report` summarizes a period (M6), and the database migrates itself. The contract
+> is pinned to kit v0.3.0. Open: terminal UX (M3) and scenarios (M5). See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -88,7 +89,7 @@ PC at all.
 | **Packaging** (M2) | 🆕 Unreleased | `npm i -g .` installs `fagent`, `fagent --version`; checked on Linux and Windows in CI |
 | **Database migrations** | 🆕 Unreleased | an older harness database is brought forward on open; a newer one is refused |
 | **MCP transport** (M4) | 🆕 Unreleased | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
-| **Report mode** (`fagent report`) | 🚧 Planned (M6) | a summary from the audit trail, no kit writes |
+| **Report mode** (M6) | 🆕 Unreleased | `fagent report --since 7d` summarizes a period from the audit trail; reads the database only, no kit root needed |
 
 ---
 
@@ -134,6 +135,7 @@ You see the plan the kit produced in its dry run and are asked once. Anything bu
 fagent chat --model qwen2.5:3b  # local model via Ollama
 fagent chat --demo              # no model at all: a scripted diagnosis
 fagent history --last 20        # what the harness did, from its own database
+fagent report --since 7d        # a summary of the last week for a person (--json for machines)
 ```
 `chat` starts with a short digest of the earlier sessions; `--no-memory` starts without it.
 
