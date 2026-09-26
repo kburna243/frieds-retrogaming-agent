@@ -15,7 +15,14 @@ import { LATEST_SCHEMA_VERSION, MIGRATIONS, SchemaTooNewError, assertMigrationsC
 
 const directories: string[] = [];
 afterEach(() => {
-  for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true });
+  for (const directory of directories.splice(0)) {
+    // Best effort, as in test/helpers.ts: Windows can hold a handle a moment after SQLite or a child closed it.
+    try {
+      rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {
+      // the OS reclaims the temp folder
+    }
+  }
 });
 
 function dbPath(): string {

@@ -25,11 +25,21 @@ import { FAKE_PERSON } from './kit/fake-kit.mjs';
 
 const FAKE_SERVER = fileURLToPath(new URL('./kit/fake-kit-mcp.mjs', import.meta.url));
 const open: McpKitTransport[] = [];
+const stores: Store[] = [];
 const directories: string[] = [];
 
 afterEach(async () => {
   for (const transport of open.splice(0)) await transport.close();
-  for (const directory of directories.splice(0)) rmSync(directory, { recursive: true, force: true });
+  // Windows keeps the folder locked while SQLite has the file open.
+  for (const store of stores.splice(0)) store.close();
+  for (const directory of directories.splice(0)) {
+    // Best effort, as in test/helpers.ts: Windows can hold a handle a moment after SQLite or a child closed it.
+    try {
+      rmSync(directory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {
+      // the OS reclaims the temp folder
+    }
+  }
 });
 
 interface Setup {
@@ -71,6 +81,7 @@ async function gate(s: Setup, answers: Array<boolean | { approved: boolean; said
   const client = new KitClient(s.transport);
   const catalog = await client.catalog({ anonymize });
   const store = Store.open(join(s.directory, 'harness.db'));
+  stores.push(store);
   const session = store.startSession({ permissionLevel: 'operator', model: 'test', provider: 'local' });
   const human = new ScriptedHumanGateway(answers);
   const engine = new PolicyEngine({
