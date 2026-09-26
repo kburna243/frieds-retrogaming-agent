@@ -116,7 +116,7 @@ describe('MCP transport against the fake server process', () => {
     const s = setup();
     await s.transport.connect();
     expect(s.transport.protocolVersion).toBe('2025-06-18');
-    expect(s.transport.kitVersion).toBe('0.3.0');
+    expect(s.transport.kitVersion).toBe('0.3.1');
     expect(s.transport.toolNames.has('status')).toBe(true);
     expect(s.transport.toolNames.has('operations')).toBe(false);
     // Interactive steps are not offered by the server either.
@@ -201,13 +201,15 @@ describe('harness with the MCP transport', () => {
     expect(() => loadConfig({ kitRoot, requireModel: false, transport: 'http' }, {})).toThrow(/stdio or mcp/);
   });
 
-  it('records the kit version the server reported in the session row', async () => {
+  it('records the kit version in the session row, from the result rather than only the handshake', async () => {
     const s = setup();
     const config = loadConfig({ kitRoot: 'D:\\cabinet\\frieds-retrogaming-kit', db: join(s.directory, 'h.db'), requireModel: false }, {});
     const harness = await createHarness(config, { transport: s.transport, gateway: new ScriptedModelGateway() });
-    expect(harness.kitVersion).toBe('0.3.0');
+    // Since ApiVersion 1.1 the kit names its version inside every result, so the MCP path and the plain stdio path
+    // report the same number. The fake keeps both from one constant, so this cannot pass by accident.
+    expect(harness.kitVersion).toBe('0.3.1');
     const session = harness.store.recentSessions(1)[0];
-    expect(session?.kit_version).toBe('0.3.0');
+    expect(session?.kit_version).toBe('0.3.1');
     expect(session?.transport).toBe('mcp-stdio');
     harness.store.close();
   });

@@ -1,5 +1,5 @@
 /**
- * The Kit API wire format (contract/API.md, ApiVersion 1.0).
+ * The Kit API wire format (contract/API.md, ApiVersion 1.1).
  *
  * Everything in this file is *the kit's* shape, not ours: PowerShell serializes PascalCase properties, so the
  * harness speaks PascalCase on the wire and never rewrites keys. Only `src/policy` and above use camelCase.
@@ -64,6 +64,8 @@ export interface StepRecord {
 /** The single document `api\Invoke-KitApi.ps1` writes to standard output. */
 export interface OperationResult {
   ApiVersion: string;
+  /** The kit's own version, added in ApiVersion 1.1. Empty when an older kit answers. */
+  KitVersion: string;
   Operation: string;
   Kind: OperationKind;
   Success: boolean;
@@ -83,6 +85,7 @@ export interface OperationResult {
 /** The exact field set the kit's contract tests pin (API.md "Result"). */
 export const RESULT_FIELDS: readonly string[] = [
   'ApiVersion',
+  'KitVersion',
   'Operation',
   'Kind',
   'Success',
@@ -142,6 +145,8 @@ export function parseKitResult(stdout: string): OperationResult {
   const record = raw as Record<string, unknown>;
   const result: OperationResult = {
     ApiVersion: String(record.ApiVersion ?? ''),
+    // Added in 1.1; a kit that predates it simply has no such field, which is not a contract violation.
+    KitVersion: String(record.KitVersion ?? ''),
     Operation: String(record.Operation ?? ''),
     Kind: record.Kind === 'Change' ? 'Change' : 'Read',
     Success: Boolean(record.Success),

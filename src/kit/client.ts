@@ -71,6 +71,7 @@ export class KitClient {
   readonly transport: KitTransport;
   #catalog: OperationSpec[] | null = null;
   #apiVersion: string | null = null;
+  #kitVersion: string | null = null;
 
   constructor(transport: KitTransport) {
     this.transport = transport;
@@ -79,6 +80,17 @@ export class KitClient {
   /** The last seen ApiVersion, once a call happened. */
   get apiVersion(): string | null {
     return this.#apiVersion;
+  }
+
+  /**
+   * The kit's own version, once a call happened — `KitVersion` in every result since ApiVersion 1.1.
+   *
+   * This is the only way the harness learns it without reading anything of the kit: no file, no VERSION, no registry.
+   * Over MCP the server handshake reports the same number; here it comes from the document itself, so both
+   * transports agree. `null` until the first call, empty string from a kit older than 1.1.
+   */
+  get kitVersion(): string | null {
+    return this.#kitVersion;
   }
 
   /**
@@ -122,6 +134,7 @@ export class KitClient {
     }
 
     this.#apiVersion = result.ApiVersion;
+    if (result.KitVersion) this.#kitVersion = result.KitVersion;
     if (apiMajor(result.ApiVersion) !== SUPPORTED_API_MAJOR) throw new ApiVersionMismatchError(result.ApiVersion);
 
     return { result, exitCode: raw.exitCode, argv: raw.argv, succeeded: result.Success };

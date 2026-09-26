@@ -63,10 +63,20 @@ export function schemaForParameter(param: ParameterSpec): Record<string, unknown
   }
 }
 
+/**
+ * Names a tool must never offer, whatever a catalog claims.
+ *
+ * `-Apply` and `-Approved` are the API's own switches, and since ApiVersion 1.1 the kit refuses them as parameter
+ * names too. The harness keeps its side of that rule: a model gets no schema field that reads like permission,
+ * because permission is not something a model asks for.
+ */
+export const NEVER_A_PARAM = new Set(['apply', 'approved']);
+
 export function schemaForParameters(parameters: ParameterSpec[]): JsonSchema {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   for (const param of parameters) {
+    if (NEVER_A_PARAM.has(param.Name.toLowerCase())) continue;
     properties[param.Name] = schemaForParameter(param);
     if (param.Mandatory) required.push(param.Name);
   }

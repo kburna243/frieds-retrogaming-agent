@@ -192,7 +192,7 @@ describe('digests', () => {
 
   it('a plan view carries both digests and the human sees the operation and parameters', () => {
     const dryRun: OperationResult = {
-      ApiVersion: '1.0', Operation: 'step.x', Kind: 'Change', Success: true, Status: 'WhatIf', Applied: false,
+      ApiVersion: '1.1', KitVersion: '0.3.1', Operation: 'step.x', Kind: 'Change', Success: true, Status: 'WhatIf', Applied: false,
       Message: 'would do', Warnings: [], Errors: [], Changes: [{ Kind: 'File', Target: 'a.cfg', Detail: '' }],
       Backups: [], Approvals: [], Duration: 0, StartedAt: 'now', Data: { Steps: [] },
     };

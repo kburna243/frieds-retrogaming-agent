@@ -1,11 +1,11 @@
 {
-  "ApiVersion": "1.0",
+  "ApiVersion": "1.1",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
     "branch": "origin/main",
-    "commit": "b5df22f4a5321238e979e26cda5b6ce8f8c84920",
-    "kitVersion": "0.3.0",
+    "commit": "0ab1116d742245270265b6c28eab310e19a75672",
+    "kitVersion": "0.3.1",
     "fetched": "2026-09-26"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",

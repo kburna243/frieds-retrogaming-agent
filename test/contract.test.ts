@@ -9,7 +9,7 @@ import { buildKitArgv, kitApiScript, windowsPowerShellPath, type KitRequest } fr
 import { buildTools, filterReadTools, runnableSteps, schemaForParameters } from '../src/kit/tools.ts';
 import { validateParameters } from '../src/kit/client.ts';
 import { makeHarness } from './helpers.ts';
-import { catalog as fakeCatalog, handle } from './kit/fake-kit.mjs';
+import { catalog as fakeCatalog, handle, KIT_VERSION } from './kit/fake-kit.mjs';
 import snapshot from '../contract/catalog-v1.json' with { type: 'json' };
 
 describe('the JSON document of the kit', () => {
@@ -38,6 +38,41 @@ describe('the JSON document of the kit', () => {
     expect(apiMajor('2.0')).toBe(2);
     expect(apiMajor('')).toBe(-1);
     expect(apiMajor(undefined)).toBe(-1);
+  });
+
+  it('reads the kit version out of the result, and stays quiet about a kit that has none', () => {
+    // ApiVersion 1.1 added KitVersion. An older kit is not a contract violation, it just does not know the field.
+    const withVersion = parseKitResult(JSON.stringify(handle({ operation: 'status' }).result));
+    expect(withVersion.KitVersion).toBe('0.3.1');
+
+    const before = { ...handle({ operation: 'status' }).result } as Record<string, unknown>;
+    delete before.KitVersion;
+    const older = parseKitResult(JSON.stringify(before));
+    expect(older.KitVersion).toBe('');
+    expect(older.ApiVersion).toBe('1.1');
+  });
+
+  it('never puts -Apply or -Approved where a parameter could sit', () => {
+    // The kit refuses those names as parameters since 1.1. The harness does not offer them either, whatever a
+    // catalog claims — a model must not be able to spell permission.
+    const schema = schemaForParameters([
+      { Name: 'Path', Type: 'String', Mandatory: true },
+      { Name: 'Apply', Type: 'switch', Mandatory: false },
+      { Name: 'approved', Type: 'switch', Mandatory: true },
+    ]);
+    expect(Object.keys(schema.properties)).toEqual(['Path']);
+    expect(schema.required).toEqual(['Path']);
+  });
+
+  it('the fake kit refuses Apply as a parameter, in any spelling', () => {
+    // API.md since 1.1: the switch names of the API are never step parameters. A refusal is `Failed` with exit 2 —
+    // there is no "Refused" status, that is the exit code's job.
+    for (const name of ['Apply', 'apply', 'APPROVED']) {
+      const { result, exitCode } = handle({ operation: 'components', parameters: { [name]: true } });
+      expect(result.Success, name).toBe(false);
+      expect(exitCode, name).toBe(2);
+      expect(result.Errors.join(' ')).toMatch(/Unknown parameter or not allowed/);
+    }
   });
 });
 
@@ -73,7 +108,9 @@ describe('the catalog, and only the catalog, decides what is a tool', () => {
     // The snapshot is the real kit; the fake is a subset. Everything the fake claims must exist in the real one.
     for (const name of fakeNames) expect(snapshotNames).toContain(name);
     expect(snapshotNames).toContain('step.pinball.05-relocate');
-    expect(snapshot.ApiVersion).toBe('1.0');
+    expect(snapshot.ApiVersion).toBe('1.1');
+    // The fake answers as the kit version the snapshot was taken from. If this fails, one of the two was edited alone.
+    expect((snapshot.Source as { kitVersion: string }).kitVersion).toBe(KIT_VERSION);
   });
 
   it('every operation the fake offers has the real kind, availability and parameters', () => {

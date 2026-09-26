@@ -75,9 +75,10 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
   }
 
   // A transport with a long-lived server starts it now, so a server that does not come up stops the start-up and
-  // not the first tool call. The kit version is whatever the kit itself says, or nothing.
+  // not the first tool call. The kit version is whatever the kit itself says, or nothing: `KitVersion` in the
+  // result document since ApiVersion 1.1, and the MCP handshake as the older path.
   await transport.connect?.();
-  const kitVersion = transport.kitVersion ?? null;
+  const kitVersion = client.kitVersion ?? transport.kitVersion ?? null;
 
   const allTools = buildTools(catalog);
   const tools = level === 'read-only' ? filterReadTools(allTools) : allTools;

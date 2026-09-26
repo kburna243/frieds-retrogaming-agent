@@ -21,9 +21,13 @@
 
 import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
-import { catalog, defaultState, handle } from './fake-kit.mjs';
+import { catalog, defaultState, handle, KIT_VERSION } from './fake-kit.mjs';
 
-const FAKE_KIT_VERSION = '0.3.0';
+/**
+ * Reported in `serverInfo.version`. Taken from the same constant the fake kit writes into every result, so the two
+ * sources of the kit version cannot drift apart inside our own test doubles.
+ */
+const FAKE_KIT_VERSION = KIT_VERSION;
 const PROTOCOL_VERSIONS = ['2025-06-18', '2025-03-26', '2024-11-05'];
 
 const argv = process.argv.slice(2);

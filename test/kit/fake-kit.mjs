@@ -10,7 +10,14 @@
  * looks for (`Friedhelm`, `GAMEMASTER-PC`, `example.test`). No real machine is described here.
  */
 
-export const API_VERSION = '1.0';
+export const API_VERSION = '1.1';
+
+/**
+ * The kit's own version, reported since ApiVersion 1.1 in every result (`KitVersion`).
+ * The fake says what the contract snapshot in contract/ was taken from, so a test can see the same number a real
+ * cabinet of that kit version would report.
+ */
+export const KIT_VERSION = '0.3.1';
 
 /** The synthetic "person" behind the fake cabinet. Used only to prove `-Anonymize` works. */
 export const FAKE_PERSON = {
@@ -34,9 +41,12 @@ const REPLACEMENTS = [
 /** A synthetic cabinet root, in the style the kit's own allowlist permits (C:\RetroBat, D:\Pinball). */
 export const SYNTH_RETROBAT = 'C:\\RetroBat';
 
+/** Refused as parameter names in any spelling; the set holds lower-cased names, see `parameterProblems`. */
 const DENIED_PARAMETERS = new Set([
-  'StatePath', 'Culture', 'KitUserSid', 'TrustedOwner', 'TaskPrefix', 'AutomationDir', 'LayersKey',
-  'RegistryRoots', 'AppCompatRoots', 'AnswerFile', 'WhatIf', 'Confirm',
+  'statepath', 'culture', 'kitusersid', 'trustedowner', 'taskprefix', 'automationdir', 'layerskey',
+  'registryroots', 'appcompatroots', 'answerfile', 'whatif', 'confirm',
+  // Since ApiVersion 1.1: the names of the API's own switches are never step parameters.
+  'apply', 'approved',
 ]);
 
 const INTERACTIVE_STEPS = new Set(['step.pinball.08-screens', 'step.lightgun.09-verify']);
@@ -490,7 +500,8 @@ function parameterProblems(operation, parameters) {
   const spec = catalog().find((entry) => entry.Name === operation);
   if (!spec) return null; // unknown operation is reported by the caller
   for (const [key, value] of Object.entries(parameters)) {
-    if (DENIED_PARAMETERS.has(key) || !spec.Parameters.some((p) => p.Name === key)) {
+    // PowerShell matches parameter names without regard to case, so the refusal has to as well.
+    if (DENIED_PARAMETERS.has(key.toLowerCase()) || !spec.Parameters.some((p) => p.Name === key)) {
       return `Unknown parameter or not allowed through the API: ${key}`;
     }
     if (!isPlain(value)) return `Unknown parameter or not allowed through the API: ${key}`;
@@ -514,6 +525,7 @@ function refused(operation, message, startedAt) {
 function result(input) {
   return {
     ApiVersion: API_VERSION,
+    KitVersion: KIT_VERSION,
     Operation: input.operation,
     Kind: input.kind === 'Change' ? 'Change' : 'Read',
     Success: ['Ok', 'Done', 'Skipped', 'WhatIf'].includes(input.status),

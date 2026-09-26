@@ -31,6 +31,8 @@ export interface FakeRequest {
 
 export interface FakeResult {
   ApiVersion: string;
+  /** The kit's own version, part of the result since ApiVersion 1.1. */
+  KitVersion: string;
   Operation: string;
   Kind: 'Read' | 'Change';
   Success: boolean;
@@ -48,6 +50,7 @@ export interface FakeResult {
 }
 
 export declare const API_VERSION: string;
+export declare const KIT_VERSION: string;
 export declare const FAKE_PERSON: { user: string; profile: string; computer: string; sid: string; ip: string; email: string };
 export declare const SYNTH_RETROBAT: string;
 export declare function catalog(): FakeOperationSpec[];
