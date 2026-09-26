@@ -18,11 +18,11 @@ without the cabinet.
 | MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server; **not yet run on the cabinet**. Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
 | CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
-| Fake cabinet (`test/kit/`) — the API contract as a second implementation | works, cross-checked against the pinned snapshot |
-| Tests | **97 passed**, 9 files, no network, no Windows, ~2 s |
+| Fake cabinet (`test/kit/`) — the API contract as a second implementation | works; every operation it offers has exactly the kind, availability and parameters of the pinned snapshot (tested), including `backup.remove` and `profile.*` of kit 0.3.0 |
+| Tests | **110 passed**, 10 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 63 files |
-| Pinned contract (`contract/`) | kit 0.3.0, commit `e2885085…`, ApiVersion 1.0. `API.md` is current; **`catalog-v1.json` is incomplete** (see below) and must be regenerated with the fixed updater |
+| Pinned contract (`contract/`) | kit 0.3.0, commit `b5df22f4…`, ApiVersion 1.0, 34 operations; made by the fixed updater (asks the kit) |
 
 Checked on a real Windows machine against a real kit: `status` read the doctor live; a step whose precondition was not
 met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOWNABLE`) instead of asking to apply;
@@ -36,22 +36,20 @@ sound like a missing feature.
 Compared by reading the kit's repository (not the cabinet), between `c019818` (the old snapshot) and `7e7d546`
 (release v0.3.0):
 
-- **New operation `backup.remove`** (Change, `Path`). Not in the fake cabinet, not offered as a tool. Decide whether it gets a fixed tool (it deletes one kit backup, nothing else) or stays reachable only
-  through `fagent run`.
-- **`profile.import` / `profile.export` are stricter:** a command without its own `-WhatIf` is not run at all without
-  `-Apply` (the dry run returns the call), `NeedsUser`/`Failed` rows land in `Warnings`/`Errors`, and `AutoInstall`
-  is refused unless the command takes `-Approve`. The fake cabinet should learn this before a test relies on it.
+- **New operation `backup.remove`** (Change, `Path`). In the fake cabinet; **not offered to the model** (it deletes
+  something), only a person runs it with `fagent run backup.remove --param Path=…`. The same holds for
+  `backup.export`, which never had a tool.
+- **`profile.import` / `profile.export` are available** with their commands' parameters. `profile.export` has no
+  dry run of its own, so its plan is the call. `profile.import`'s rows count: a `NeedsUser` row (a missing driver
+  without `AutoInstall`) means no plan, and the gate passes the kit's warning to the model. With `AutoInstall` the
+  installer question is part of the plan and `-Approved` goes out only with the yes. All in `test/kit-v030.test.ts`.
 - **An MCP server** (`api\Start-KitMcpServer.ps1`, stdio, JSON-RPC 2.0). M4 is built on it, see below.
 - **`ApiVersion` is still `1.0`** although an operation was added. That is the kit's to fix; the issue text is in
   [KIT-REQUESTS.md](KIT-REQUESTS.md).
 
-**The first refresh to 0.3.0 missed part of the catalog.** `API.md` in `contract/` is right, but
-`catalog-v1.json` still lists 33 operations: no `backup.remove`, and `profile.*` as not available without parameters.
-The cause was on our side: `tools/Update-ContractSnapshot.ps1` rebuilt the catalog from a hand-written list instead of
-asking the kit. It now checks out the pinned commit into a temporary git worktree and asks that kit's own
-`Invoke-KitApi.ps1 -Operation operations`. Re-run it on the cabinet, then `tools\Test-ContractDrift.ps1` must say the
-snapshot matches. After that, bring `test/kit/fake-kit.mjs` to the new snapshot (`backup.remove`, `profile.*` with
-their parameters) — `test/contract.test.ts` will tell you where it differs.
+The first refresh to 0.3.0 missed part of the catalog, because `tools/Update-ContractSnapshot.ps1` rebuilt it from a
+hand-written list. It now asks the kit at the pinned commit (a temporary git worktree runs its own
+`Invoke-KitApi.ps1 -Operation operations`), and the snapshot on `main` was made that way.
 
 ## M4: the MCP transport
 
@@ -118,7 +116,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 97 tests + repo rules — this is the bar
+npm run check        # typecheck + 110 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -136,7 +134,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 97 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 110 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -153,7 +151,7 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 97 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 110 passing tests. If anything fails, fix that
 before you start.
 
 Then do milestone M6 from ROADMAP.md: read-only report mode. `fagent report --since 7d` builds a summary for a

@@ -39,7 +39,17 @@ harness version, independent of the kit's.
 
 - `README.md` / `README.de.md` follow the layout of the kit's README: header, badges, status note, feature status,
   quickstart, safety principles, documentation index.
-- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (97).
+- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (110).
+
+- **The fake cabinet speaks kit 0.3.0:** `backup.remove` (only kit backups, recognized in the dry run too),
+  `profile.export` (the plan is the call) and `profile.import` (rows, `NeedsUser` stops the plan, `AutoInstall` asks
+  through `Approvals`), and the step parameters as the snapshot has them. A contract test now fails when an
+  operation of the fake differs from the snapshot in kind, availability or parameters.
+- **`NOT_OFFERED`:** a model reaches only the operations its tools name. `run_step` used to accept any catalog
+  operation (still gated), so a model could reach `backup.export` or `backup.remove` without being offered them.
+  `fagent run` goes through `PolicyEngine.runOperation`, the same gate for a person, not limited to the tools.
+- A refused dry run (`DRY_RUN_NOT_SHOWNABLE`) carries the kit's `Warnings` and `Errors` to the model.
+- `test/kit-v030.test.ts` (12 tests).
 
 ### Fixed
 
@@ -55,8 +65,6 @@ harness version, independent of the kit's.
 
 ### Known gaps
 
-- `contract/catalog-v1.json` for kit 0.3.0 is incomplete (made by the old updater). Re-run the fixed
-  `tools\Update-ContractSnapshot.ps1` on the cabinet; then the fake cabinet learns `backup.remove` and `profile.*`.
 - The MCP transport has not run against the real kit yet.
 
 ## 0.1.0 — first release of the harness

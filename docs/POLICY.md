@@ -12,13 +12,19 @@ throwing, so a refusal is an answer the model can read.
 | # | Stage | What happens | What cannot happen |
 | --- | --- | --- | --- |
 | 1 | level | the configured level must allow this tool's kind | a `Change` at level `read-only` |
-| 2 | catalog | the operation must exist, be `Available`, and not be `Interactive` | a guess, or a step the kit does not list |
+| 2 | catalog | the operation must exist, be `Available`, not be `Interactive`, and — for a model — be named by one of its tools | a guess, a step the kit does not list, or a kit operation the model is not offered |
 | 3 | parameters | plain values only, names from the catalog, mandatory ones present | `StatePath`, `Culture`, `TrustedOwner`, … (denied by the kit) |
 | 4 | **dry run** | call the operation with no `-Apply`, with `-Anonymize` if the session uses it | an apply flag anywhere in this call |
 | 5 | plan | build the plan the human reads: message, changes, warnings, approvals, digests | a plan from a kit that refused to show one |
 | 6 | **human** | one plan in, one decision out (`HumanGateway.confirm`) | a model, a script or a flag answering here |
 | 7 | apply | `-Apply`, plus `-Approved` if and only if the plan contained approvals | a second apply reusing an old approval |
 | 8 | verify | read `status` again and report what changed | — |
+
+**Who may name an operation.** A model reaches exactly the operations its tools name; `run_step` names the runnable
+wizard steps and nothing else. An operation that exists in the kit but is not offered (today `backup.remove` and
+`backup.export`) is refused with `NOT_OFFERED` before any kit call, and the answer tells the model which
+`fagent run` command to give the person. `fagent run <operation>` is the person's own path
+(`PolicyEngine.runOperation`): any catalog operation, through the same stages 1–8, with no apply or approved flag.
 
 A "no" at stage 6 stops everything: the plan row says `declined`, no kit call with `-Apply` is ever made, and the
 answer the model gets is the human's own words.
