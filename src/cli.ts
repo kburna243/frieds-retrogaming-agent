@@ -8,13 +8,13 @@
  */
 
 import process from 'node:process';
-import { createInterface } from 'node:readline';
 import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { HarnessConfig } from './config.ts';
 import { loadConfig, ConfigError } from './config.ts';
 import { createHarness, type HarnessOptions } from './harness.ts';
-import { TerminalHumanGateway, type HumanGateway } from './policy/human.ts';
+import type { HumanGateway, Prompter } from './policy/human.ts';
+import { createPrompter, NeverApprovesGateway, TerminalHumanGateway } from './policy/human.ts';
 import type { KitTransport } from './kit/transport.ts';
 import type { ModelGateway } from './llm/gateway.ts';
 import { resumeConversation, ResumeError } from './agent/resume.ts';
@@ -97,8 +97,10 @@ function harnessOptions(deps: CliDeps, extra: HarnessOptions = {}): HarnessOptio
 }
 
 /** With --json, standard output carries exactly one JSON document; everything for the person goes to stderr. */
-function humanFor(deps: CliDeps, json: boolean): HumanGateway {
-  return deps.human ?? new TerminalHumanGateway(json ? { write: (text) => process.stderr.write(text) } : {});
+function humanFor(deps: CliDeps, json: boolean, prompter?: Prompter): HumanGateway {
+  if (deps.human) return deps.human;
+  const write = json ? (text: string) => process.stderr.write(text) : undefined;
+  return new TerminalHumanGateway({ ...(write ? { write } : {}), ...(prompter ? { prompter } : {}) });
 }
 
 function configOptions(flags: Flags) {
@@ -266,7 +268,15 @@ async function runChat(config: HarnessConfig, flags: Flags, deps: CliDeps): Prom
 
   const scripted = flags.demo === 'true' ? demoScript(config) : undefined;
   const gateway = scripted ?? deps.gateway;
-  const harness = await createHarness(config, harnessOptions(deps, { human: humanFor(deps, json), ...(gateway ? { gateway } : {}) }));
+
+  // One reader on the terminal for the whole chat: the chat's own input and the plan question share it, so a
+  // question can never steal a line that was meant as the next thing to ask.
+  const interactive = !flags.message;
+  const prompter = interactive && !deps.human ? createPrompter(process.stdin, process.stdout) : undefined;
+  const harness = await createHarness(
+    config,
+    harnessOptions(deps, { human: humanFor(deps, json, prompter), ...(gateway ? { gateway } : {}) }),
+  );
   const out = (text: string): void => {
     if (!json) process.stdout.write(text);
   };
@@ -340,14 +350,17 @@ async function runChat(config: HarnessConfig, flags: Flags, deps: CliDeps): Prom
 
   out(`fagent chat · level ${config.level} · model ${config.model.provider}:${config.model.model} · kit ${config.kitRoot}\n`);
   out('a change is always shown as a plan and confirmed by you at this terminal. Ctrl+D ends.\n\n');
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  for (;;) {
-    const line = await new Promise<string>((resolve) => rl.question('you > ', resolve));
-    const text = line.trim();
-    if (!text) break;
-    await loop.ask(text);
+  const reader = prompter ?? createPrompter(process.stdin, process.stdout);
+  try {
+    for (;;) {
+      const line = await reader.ask('you > ');
+      const text = line.trim();
+      if (!text) break;
+      await loop.ask(text);
+    }
+  } finally {
+    reader.dispose();
   }
-  rl.close();
   out(`\n(session ${harness.sessionId} · audit: ${config.dbPath})\n`);
   harness.close();
   return 0;
