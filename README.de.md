@@ -28,8 +28,8 @@
 > CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt mit einer
 > Zusammenfassung der früheren (M1), der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
 > Automaten gelaufen), `npm i -g .` installiert `fagent` (M2), `fagent report` fasst einen Zeitraum zusammen (M6),
-> und die Datenbank migriert sich selbst. Der Vertrag ist auf Kit v0.3.0 festgeschrieben. Offen: Terminal-Bedienung
-> (M3) und Szenarien (M5). Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
+> und die Datenbank migriert sich selbst. Der Vertrag ist auf Kit v0.3.0 festgeschrieben. Streaming und `chat --continue`
+> sind drin (M3). Offen: Szenarien (M5). Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
 > und die [ROADMAP](ROADMAP.md).
 
 ---
@@ -141,7 +141,10 @@ fagent chat --demo              # ganz ohne Modell: eine geskriptete Diagnose
 fagent history --last 20        # was der Harness getan hat, aus seiner Datenbank
 fagent report --since 7d        # eine Zusammenfassung der letzten Woche für Menschen (--json für Maschinen)
 ```
-`chat` beginnt mit einer kurzen Zusammenfassung der früheren Sitzungen; `--no-memory` beginnt ohne.
+`chat` beginnt mit einer kurzen Zusammenfassung der früheren Sitzungen (`--no-memory` beginnt ohne) und zeigt die
+Antwort, während sie entsteht (`--no-stream` wartet auf die ganze). `--continue` setzt das letzte Gespräch fort, nur
+seine Worte: eine Änderung braucht weiter dein Ja. `--max-rounds` legt fest, wie viele Runden eine Frage dauern darf,
+und `--json` gibt bei jedem Befehl ein JSON-Dokument aus.
 
 > [!TIP]
 > Die Stufe ist `read-only`, solange du nicht `--level operator` angibst. Es gibt keine Stufe, die den Dry Run oder

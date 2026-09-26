@@ -133,3 +133,19 @@ export function callTrace(requests: readonly KitRequest[]): string[] {
 export function toPosix(path: string): string {
   return path.split('\\').join('/');
 }
+
+/** Runs a CLI call and keeps what it wrote, so a test can check stdout and stderr apart. */
+export async function captureOutput(run: () => Promise<number>): Promise<{ code: number; out: string; err: string }> {
+  const out: string[] = [];
+  const err: string[] = [];
+  const write = { out: process.stdout.write.bind(process.stdout), err: process.stderr.write.bind(process.stderr) };
+  process.stdout.write = ((chunk: string) => (out.push(String(chunk)), true)) as typeof process.stdout.write;
+  process.stderr.write = ((chunk: string) => (err.push(String(chunk)), true)) as typeof process.stderr.write;
+  try {
+    const code = await run();
+    return { code, out: out.join(''), err: err.join('') };
+  } finally {
+    process.stdout.write = write.out;
+    process.stderr.write = write.err;
+  }
+}

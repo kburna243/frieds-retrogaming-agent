@@ -20,7 +20,7 @@ export interface Parsed {
 }
 
 /** Flags that never take a value. */
-const BOOLEAN = new Set(['json', 'help', 'version', 'demo', 'no-anonymize', 'no-memory', 'verbose']);
+const BOOLEAN = new Set(['json', 'help', 'version', 'demo', 'no-anonymize', 'no-memory', 'no-stream', 'continue', 'verbose']);
 
 export function parseArgs(argv: readonly string[]): Parsed {
   const flags: Flags = {};
@@ -80,6 +80,8 @@ Usage
   fagent status [--json]                 the doctor, read-only, no model needed
   fagent run <operation> [--param K=V] [--flag K]   one operation through the full gate (dry run → plan → your yes → apply → verify)
   fagent chat [--message "..."] [--demo] talk to the cabinet with a model
+       [--continue | --session <id>]     carry on an earlier conversation (its words, never its approvals)
+       [--max-rounds 8] [--no-stream]   round budget; text appears as it arrives unless --no-stream
   fagent history [--last 20]             what this harness did, from its own database
   fagent report [--since 7d] [--json]    a summary of that period for a person; reads the database, never the kit
   fagent version                         the harness version (also --version)
@@ -95,7 +97,7 @@ Common flags
   --transport stdio|mcp                                          (env FAGENT_TRANSPORT, default stdio; mcp needs kit ≥ 0.3.0)
   --no-anonymize    local model only: keep real paths in the plan (default: always -Anonymize)
   --no-memory       chat only: start without the digest of earlier sessions
-  --json            machine-readable output
+  --json            one JSON document on stdout, for every command (questions to you go to stderr)
   --demo            no model at all: a scripted one runs the diagnosis order so you can see the flow
 
 There is no --yes and no --approve. A change is confirmed by you, at this terminal, per plan — that is the whole

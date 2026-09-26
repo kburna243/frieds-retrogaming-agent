@@ -26,12 +26,21 @@ export interface AgentLoopOptions {
   maxRounds?: number;
   /** Start from a digest of earlier sessions (default true). `false` starts with no memory at all. */
   memory?: boolean;
+  /** Pass assistant text on as it arrives (`text` events). Tool calls still reach the gate only when complete. */
+  stream?: boolean;
+  /**
+   * An earlier conversation to carry on (`fagent chat --continue`): user and assistant text only, see
+   * `src/agent/resume.ts`. It is put after the system prompt, once, and recorded in this session too.
+   */
+  resume?: ChatMessage[];
   /** Called for every assistant text and every tool answer, so the CLI can show what is happening. */
   onEvent?: (event: AgentEvent) => void;
 }
 
 export type AgentEvent =
-  | { type: 'assistant'; text: string }
+  | { type: 'round'; round: number; maxRounds: number }
+  | { type: 'text'; delta: string }
+  | { type: 'assistant'; text: string; streamed: boolean }
   | { type: 'tool-call'; tool: string; args: Record<string, unknown> }
   | { type: 'tool-answer'; tool: string; ok: boolean; stage: string; summary: string }
   | { type: 'plan'; operation: string; text: string }
@@ -40,6 +49,7 @@ export type AgentEvent =
 export interface AgentRun {
   answer: string;
   rounds: number;
+  maxRounds: number;
   toolCalls: number;
   refused: number;
 }
@@ -77,6 +87,10 @@ export class AgentLoop {
         }),
       });
       this.#o.store.addMessage({ sessionId: this.#o.sessionId, role: 'system', content: this.#history[0]?.content ?? null, anonymized: this.#o.gateway.info.anonymizeRequired });
+      for (const message of this.#o.resume ?? []) {
+        this.#history.push(message);
+        this.#o.store.addMessage({ sessionId: this.#o.sessionId, role: message.role, content: message.content, anonymized: this.#o.gateway.info.anonymizeRequired });
+      }
       this.#started = true;
     }
     this.#history.push({ role: 'user', content: userText });
@@ -90,7 +104,13 @@ export class AgentLoop {
 
     while (rounds < maxRounds) {
       rounds += 1;
-      const completion = await this.#o.gateway.complete({ messages: this.#history, tools: this.#o.tools });
+      this.#o.onEvent?.({ type: 'round', round: rounds, maxRounds });
+      const onText = this.#o.stream ? (delta: string) => this.#o.onEvent?.({ type: 'text', delta }) : undefined;
+      const completion = await this.#o.gateway.complete({
+        messages: this.#history,
+        tools: this.#o.tools,
+        ...(onText ? { onText } : {}),
+      });
       const message = completion.message;
       this.#history.push(message);
       this.#o.store.addMessage({
@@ -100,11 +120,11 @@ export class AgentLoop {
         anonymized: this.#o.gateway.info.anonymizeRequired,
       });
       if (message.content) {
-        this.#o.onEvent?.({ type: 'assistant', text: message.content });
+        this.#o.onEvent?.({ type: 'assistant', text: message.content, streamed: completion.streamed === true });
         answer = message.content;
       }
       const calls = message.toolCalls ?? [];
-      if (calls.length === 0) return { answer, rounds, toolCalls, refused };
+      if (calls.length === 0) return { answer, rounds, maxRounds, toolCalls, refused };
 
       for (const call of calls) {
         toolCalls += 1;
@@ -131,7 +151,7 @@ export class AgentLoop {
     }
 
     this.#o.onEvent?.({ type: 'round-limit', rounds });
-    return { answer: answer || 'I stopped after too many rounds without an answer.', rounds, toolCalls, refused };
+    return { answer: answer || 'I stopped after too many rounds without an answer.', rounds, maxRounds, toolCalls, refused };
   }
 }
 

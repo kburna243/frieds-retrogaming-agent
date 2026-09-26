@@ -31,7 +31,14 @@ export class ScriptedModelGateway implements ModelGateway {
     const step = this.#script[this.#index];
     this.#index += 1;
     if (!step) return { finishReason: 'stop', message: { role: 'assistant', content: '(script exhausted)' } };
-    if ('text' in step) return { finishReason: 'stop', message: { role: 'assistant', content: step.text } };
+    if ('text' in step) {
+      // Streams word by word when asked, so the terminal path is tested the same way a real endpoint drives it.
+      if (request.onText) {
+        for (const piece of step.text.match(/\S+\s*|\s+/g) ?? []) request.onText(piece);
+        return { finishReason: 'stop', message: { role: 'assistant', content: step.text }, streamed: true };
+      }
+      return { finishReason: 'stop', message: { role: 'assistant', content: step.text } };
+    }
     const calls = 'call' in step ? [step.call] : step.calls;
     const message: ChatMessage = {
       role: 'assistant',

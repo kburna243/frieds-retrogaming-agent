@@ -40,12 +40,19 @@ export interface CompletionRequest {
   tools: ToolDefinition[];
   temperature?: number;
   signal?: AbortSignal;
+  /**
+   * Streaming: called with each piece of assistant text as it arrives. Only text is streamed. Tool calls are
+   * assembled whole and come back in the `Completion`, so the gate never sees half a call.
+   */
+  onText?: (delta: string) => void;
 }
 
 export interface Completion {
   message: ChatMessage;
   /** `tool_calls` | `stop` — whatever the backend reported. */
   finishReason: string;
+  /** True when the text of `message` already went out through `onText`. */
+  streamed?: boolean;
 }
 
 export interface ModelGateway {
