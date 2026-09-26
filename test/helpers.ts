@@ -25,8 +25,8 @@ export interface HarnessFixture {
   transport: FakeKitTransport;
   /** What the model is offered: read tools only at the read-only level. */
   tools: ReturnType<typeof buildTools>;
-  /** What the engine knows about: always the full set, so a change can be refused with a reason. */
-  engineTools: ReturnType<typeof buildTools>;
+  /** What the engine checks against: the full catalog, whatever the level. */
+  allTools: ReturnType<typeof buildTools>;
   catalog: OperationSpec[];
   sessionId: string;
   human: ScriptedHumanGateway;
@@ -86,7 +86,8 @@ export async function makeHarness(options: FixtureOptions = {}): Promise<Harness
     engine,
     transport,
     tools,
-    engineTools,
+    /** Same list under the name `createHarness` uses, so a test can read like production code. */
+    allTools: engineTools,
     catalog,
     sessionId: session.id,
     human: human as ScriptedHumanGateway,

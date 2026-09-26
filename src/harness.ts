@@ -34,7 +34,10 @@ export interface Harness {
   readonly client: KitClient;
   readonly store: Store;
   readonly sessionId: string;
+  /** What the model is offered. At level read-only this is the read subset of `allTools`. */
   readonly tools: ToolDefinition[];
+  /** Everything the catalog describes — what the engine checks against, and what `run` resolves a name from. */
+  readonly allTools: ToolDefinition[];
   readonly catalog: OperationSpec[];
   readonly engine: PolicyEngine;
   readonly gateway: ModelGateway;
@@ -91,7 +94,8 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     level,
     human: options.human ?? new NeverApprovesGateway(),
     anonymize,
-    tools,
+    // The engine sees every tool: the level is a rule it applies, not a set of tools it never hears about.
+    tools: allTools,
     culture: config.culture,
   });
 
@@ -101,6 +105,7 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     store,
     sessionId: session.id,
     tools,
+    allTools,
     catalog,
     engine,
     gateway,

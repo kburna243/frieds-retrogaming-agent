@@ -278,6 +278,17 @@ describe('acceptance 6 — read operations are free, interactive ones are never 
     await harness.cleanup();
   });
 
+  it('the level is a rule the engine applies, not a tool the CLI never hears about', async () => {
+    // `fagent run support.bundle` at the default level resolves the name against allTools, so the answer is
+    // LEVEL_READ_ONLY and not "no such operation": the difference between a rule and a mystery.
+    const harness = await makeHarness({ level: 'read-only' });
+    expect(harness.tools.some((tool) => tool.name === 'support_bundle')).toBe(false);
+    expect(harness.allTools.some((tool) => tool.name === 'support_bundle')).toBe(true);
+    const answer = await harness.engine.handle({ tool: 'support_bundle', args: {} });
+    expect(String(answer.payload.code)).toBe('LEVEL_READ_ONLY');
+    await harness.cleanup();
+  });
+
   it('an interactive step is refused without ever starting a kit call', async () => {
     const harness = await makeHarness({ answers: [true] });
     const before = harness.transport.calls.length;

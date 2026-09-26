@@ -50,12 +50,11 @@ $results = [ordered] @{}
 
 $results['tools']    = Step '1/6 the tool set, built from the live catalog' @($common + @('tools', '--level', 'operator'))
 $results['status']   = Step '2/6 read the cabinet (no model needed)' @($common + @('status'))
-$results['anonym']   = Step '3/6 components with -Anonymize: no profile path may appear' @($common + @('status', '--json'))
+$results['anonym']   = Step '3/6 a read through -Anonymize' @($common + @('run', 'status'))
 $results['readonly'] = Step '4/6 a change at level read-only must be refused' @($common + @('run', 'support.bundle', '--level', 'read-only'))
 
 # Feed "no" into the gate: the plan must be shown and then refused, and nothing may be written.
-$decline = Step '5/6 a change at level operator: plan shown, then declined' @($common + @('run', 'support.bundle', '--level', 'operator'))
-$results['declined'] = $decline
+$results['declined'] = Step '5/6 a change at level operator: plan shown, then declined' @($common + @('run', 'support.bundle', '--level', 'operator'))
 
 $results['history']  = Step '6/6 the audit trail of everything above' @($common + @('history', '--last', '12'))
 
