@@ -5,8 +5,7 @@
  * refusal or the plan answer back. The point of these tests is that the model never finds a shortcut.
  */
 
-import { afterEach } from 'node:test';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { AgentLoop } from '../src/agent/loop.ts';
 import { systemPrompt } from '../src/agent/prompt.ts';
 import { loadConfig } from '../src/config.ts';

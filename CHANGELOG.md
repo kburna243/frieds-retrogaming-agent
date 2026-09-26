@@ -25,13 +25,28 @@ harness version, independent of the kit's.
   `serverInfo` is recorded in the session row and shown by `fagent doctor`.
 - `test/kit/fake-kit-mcp.mjs`, the MCP server of the fake cabinet, and `test/mcp-transport.test.ts` (13 tests,
   including the full gate order over MCP).
+- **Packaging (M2):** `npm i -g .` builds (`prepare`) and installs `fagent`; `fagent --version` / `fagent version`;
+  `package.json` `files` limits a pack to `dist/` and the docs. The bin is `dist/bin.js`, a launcher that hides only
+  the SQLite experimental warning. CI installs it globally on Linux and Windows (`fagent.cmd`) and runs it from
+  another folder.
+- **Schema migrations** (`src/db/migrations.ts`): `schema.sql` is frozen as version 1; later changes are numbered
+  migrations, applied in order on open, one transaction each. Migration 2 adds `sessions.transport`. A database with
+  a newer schema version is refused (`SchemaTooNewError`); `fagent doctor` shows the version.
+- `test/packaging.test.ts` and `test/store-migrations.test.ts` (10 tests).
 - Repo rule: an absolute Windows path must start at a synthetic root (`D:\cabinet`, `D:\Pinball`, `C:\RetroBat`, …).
 
 ### Changed
 
 - `README.md` / `README.de.md` follow the layout of the kit's README: header, badges, status note, feature status,
   quickstart, safety principles, documentation index.
-- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (87).
+- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (97).
+
+### Fixed
+
+- A globally installed `fagent` printed nothing: npm starts it through a symlink, and the "am I the entry point"
+  check compared the link with the real path. Both are resolved now (`isEntryPoint`).
+- `test/agent-loop.test.ts` imported `afterEach` from `node:test` instead of vitest, so its temp folders were never
+  cleaned up.
 - `tools/Update-ContractSnapshot.ps1` asks the kit for its catalog (`Invoke-KitApi.ps1 -Operation operations` in a
   temporary git worktree of the pinned commit) instead of rebuilding it from a hand-written list, which had missed
   `backup.remove` and the `profile.*` parameters of kit 0.3.0. `-KitRoot` is now mandatory; the old default was a

@@ -20,7 +20,7 @@ export interface Parsed {
 }
 
 /** Flags that never take a value. */
-const BOOLEAN = new Set(['json', 'help', 'demo', 'no-anonymize', 'no-memory', 'verbose']);
+const BOOLEAN = new Set(['json', 'help', 'version', 'demo', 'no-anonymize', 'no-memory', 'verbose']);
 
 export function parseArgs(argv: readonly string[]): Parsed {
   const flags: Flags = {};
@@ -81,6 +81,7 @@ Usage
   fagent run <operation> [--param K=V] [--flag K]   one operation through the full gate (dry run → plan → your yes → apply → verify)
   fagent chat [--message "..."] [--demo] talk to the cabinet with a model
   fagent history [--last 20]             what this harness did, from its own database
+  fagent version                         the harness version (also --version)
 
 Common flags
   --kit <path>        root of the frieds-retrogaming-kit checkout   (env FAGENT_KIT_ROOT)

@@ -12,12 +12,14 @@ without the cabinet.
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test |
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'` |
+| Schema migrations (`src/db/migrations.ts`) | works: a v1 database is brought to v2 (`sessions.transport`) on open, each step in a transaction; a newer database is refused |
+| Packaging (M2): `npm i -g .`, `fagent --version` | works; the bin link starts `dist/bin.js`, which hides only the SQLite experimental warning; CI installs it globally on Linux and Windows |
 | Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing (tested) |
 | MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server; **not yet run on the cabinet**. Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
 | CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation | works, cross-checked against the pinned snapshot |
-| Tests | **87 passed**, 7 files, no network, no Windows, ~2 s |
+| Tests | **97 passed**, 9 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 63 files |
 | Pinned contract (`contract/`) | kit 0.3.0, commit `e2885085…`, ApiVersion 1.0. `API.md` is current; **`catalog-v1.json` is incomplete** (see below) and must be regenerated with the fixed updater |
@@ -101,13 +103,13 @@ Not oversights — decisions, each with its reason.
 - **Memory is a digest, not a search.** `src/agent/memory.ts` summarizes the last five sessions into the system
   prompt (M1). There is no retrieval by topic and no memory tool for the model; add one only if a real conversation
   shows the digest is not enough. `recentToolCalls()` is still unused — the digest reads per session.
-- **No packaging yet.** `dist/` builds and `fagent` works from source; an installed global command, `--version`, and
-  completion are M2.
+- **No shell completion and no npm publish.** `npm i -g .` from a checkout is the install. Publishing to the npm
+  registry is a decision for a person, not a milestone.
 - **`kitVersion` is `null` in a session row over stdio.** API v1 does not report it, and reading `VERSION` from the
   kit's folder would cross the boundary. Over MCP the server says it. The request to the kit is written up in [KIT-REQUESTS.md](KIT-REQUESTS.md) — do
   not work around it here.
-- **No schema migrations.** One schema, one version. Add the migration runner before a second cabinet installs an
-  older database.
+- **Migrations only go forward.** There is no downgrade: a database touched by a newer harness is refused by an older
+  one (`SchemaTooNewError`). Keep a copy of the `.db` file before trying a pre-release.
 
 ## How to work on this in a cloud session
 
@@ -116,7 +118,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 87 tests + repo rules — this is the bar
+npm run check        # typecheck + 97 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -134,7 +136,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 87 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 97 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -151,20 +153,20 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 87 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 97 passing tests. If anything fails, fix that
 before you start.
 
-Then do milestone M2 from ROADMAP.md: packaging. `npm i -g .` followed by `fagent doctor` must work from any
-folder; dist/ must be complete (schema.sql included); `fagent --version` prints the harness version from
-package.json; the CI job that already runs the built CLI must cover it. No new runtime dependency, and the
-installed command must still have no --yes.
+Then do milestone M6 from ROADMAP.md: read-only report mode. `fagent report --since 7d` builds a summary for a
+person from the audit trail in the database — sessions, plans and how they ended, refusals, what status said — and
+never calls the kit. Plain text by default, `--json` for machines. It is history, so it must say so, and it must
+not suggest a change. Add tests that prove it reads only the database and makes no kit call.
 
-Finish by updating docs/HANDOFF.md (state table, and move M2 out of "next") and CHANGELOG.md, then
+Finish by updating docs/HANDOFF.md (state table, and move M6 out of "next") and CHANGELOG.md, then
 `npm run check` again. Report which commands you ran and what they printed. Do not push.
 ```
 
-Repeat the last paragraph with a different milestone (M3 terminal UX, M5 scenarios, M6 report mode) and the same
-block works again. M1 (memory) and M4 (MCP transport) are done.
+Repeat the last paragraph with a different milestone (M3 terminal UX, M5 scenarios) and the same block works again.
+M1 (memory), M2 (packaging) and M4 (MCP transport) are done, and the database has a migration runner.
 
 ## What only a human can do
 

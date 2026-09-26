@@ -26,8 +26,8 @@
 > [!NOTE]
 > **Status: v0.1.0**, verified against a real kit on a Windows cabinet. The client, the policy gate, the SQLite
 > memory, the CLI and the full test suite work. New and not yet released: a new session starts from a digest of the
-> earlier ones (M1), and the kit's MCP server can be used as transport (M4, not yet run on a cabinet). Open:
-> packaging, and a complete catalog snapshot of kit v0.3.0. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> earlier ones (M1), the kit's MCP server can be used as transport (M4, not yet run on a cabinet), `npm i -g .`
+> installs `fagent` (M2), and the database migrates itself. Open: a complete catalog snapshot of kit v0.3.0. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -85,7 +85,8 @@ PC at all.
 | **Model gateways** | ✅ Stable | local Ollama or any OpenAI-compatible endpoint; cloud only with `-Anonymize` |
 | **CLI `fagent`** | ✅ Stable | `doctor`, `tools`, `status`, `run`, `chat`, `history`; no `--yes` anywhere |
 | **Fake cabinet** (`test/kit/`) | ✅ Stable | the kit API as a second implementation, so all tests run on Linux |
-| **Packaging** (global install, `--version`) | 🚧 Planned (M2) | see [ROADMAP](ROADMAP.md) |
+| **Packaging** (M2) | 🆕 Unreleased | `npm i -g .` installs `fagent`, `fagent --version`; checked on Linux and Windows in CI |
+| **Database migrations** | 🆕 Unreleased | an older harness database is brought forward on open; a newer one is refused |
 | **MCP transport** (M4) | 🆕 Unreleased | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
 | **Report mode** (`fagent report`) | 🚧 Planned (M6) | a summary from the audit trail, no kit writes |
 
@@ -108,28 +109,31 @@ PC at all.
 ```bash
 npm install            # dev dependencies only: typescript, vitest, @types/node
 npm run check          # typecheck + tests + repo rules
+npm i -g .             # builds dist/ and installs the fagent command
+fagent --version
 ```
+Without the global install, `node --no-warnings src/cli.ts <command>` runs the same CLI from the sources.
 
 ### 2. Read the cabinet (no model needed)
 ```bash
 export FAGENT_KIT_ROOT='D:\cabinet\frieds-retrogaming-kit'
-node --no-warnings src/cli.ts doctor          # what can be reached, which ApiVersion the kit speaks
-node --no-warnings src/cli.ts doctor --transport mcp   # the same over the kit's MCP server (kit >= 0.3.0)
-node --no-warnings src/cli.ts status          # the kit's health check, read-only
-node --no-warnings src/cli.ts tools --level operator
+fagent doctor                  # what can be reached, which ApiVersion the kit speaks
+fagent doctor --transport mcp  # the same over the kit's MCP server (kit >= 0.3.0)
+fagent status                  # the kit's health check, read-only
+fagent tools --level operator
 ```
 
 ### 3. One change through the gate
 ```bash
-node --no-warnings src/cli.ts run step.lightgun.01-detect --level operator --param RetroBatRoot=C:\RetroBat
+fagent run step.lightgun.01-detect --level operator --param RetroBatRoot=C:\RetroBat
 ```
 You see the plan the kit produced in its dry run and are asked once. Anything but a yes leaves the cabinet as it was.
 
 ### 4. Talk to the cabinet
 ```bash
-node --no-warnings src/cli.ts chat --model qwen2.5:3b          # local model via Ollama
-node --no-warnings src/cli.ts chat --demo                      # no model at all: a scripted diagnosis
-node --no-warnings src/cli.ts history --last 20                # what the harness did, from its own database
+fagent chat --model qwen2.5:3b  # local model via Ollama
+fagent chat --demo              # no model at all: a scripted diagnosis
+fagent history --last 20        # what the harness did, from its own database
 ```
 `chat` starts with a short digest of the earlier sessions; `--no-memory` starts without it.
 

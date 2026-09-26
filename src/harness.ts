@@ -90,7 +90,8 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     provider: gateway.info.provider,
     apiVersion: client.apiVersion,
     kitVersion,
-    note: `tools=${tools.length} catalog=${catalog.length} transport=${transport.label}`,
+    transport: transport.label,
+    note: `tools=${tools.length} catalog=${catalog.length}`,
   });
 
   const engine = new PolicyEngine({

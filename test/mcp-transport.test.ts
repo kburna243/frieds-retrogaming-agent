@@ -197,7 +197,7 @@ describe('harness with the MCP transport', () => {
     expect(harness.kitVersion).toBe('0.3.0');
     const session = harness.store.recentSessions(1)[0];
     expect(session?.kit_version).toBe('0.3.0');
-    expect(String(session?.note)).toContain('transport=mcp-stdio');
+    expect(session?.transport).toBe('mcp-stdio');
     harness.store.close();
   });
 });

@@ -10,6 +10,7 @@ import { readFileSync } from 'node:fs';
 import { randomUUID, createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import type { OperationResult, ParameterBag } from '../kit/types.ts';
+import { BASE_SCHEMA_VERSION, MIGRATIONS, SchemaTooNewError, assertMigrationsContiguous, type Migration } from './migrations.ts';
 
 const SCHEMA = readFileSync(fileURLToPath(new URL('./schema.sql', import.meta.url)), 'utf8');
 
@@ -25,6 +26,7 @@ export interface SessionRow {
   provider: string | null;
   apiVersion: string | null;
   kitVersion: string | null;
+  transport: string | null;
 }
 
 export interface ToolCallRecord {
@@ -82,15 +84,57 @@ export interface ApprovalRecord {
 
 export class Store {
   readonly #db: DatabaseSync;
+  #schemaVersion: number;
 
-  constructor(db: DatabaseSync) {
+  /**
+   * Opens the schema: `schema.sql` (version 1) for a new file, then every migration the file has not seen yet.
+   * `migrations` is a parameter only so a test can prove the runner; product code always uses `MIGRATIONS`.
+   */
+  constructor(db: DatabaseSync, migrations: readonly Migration[] = MIGRATIONS) {
     this.#db = db;
+    assertMigrationsContiguous(migrations);
     db.exec(SCHEMA);
-    db.prepare('INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)').run('schema_version', '1');
+    db.prepare('INSERT OR IGNORE INTO meta (key, value) VALUES (?, ?)').run('schema_version', String(BASE_SCHEMA_VERSION));
+    this.#schemaVersion = this.#readSchemaVersion();
+
+    const latest = migrations.at(-1)?.version ?? BASE_SCHEMA_VERSION;
+    if (this.#schemaVersion > latest) {
+      db.close();
+      throw new SchemaTooNewError(this.#schemaVersion, latest);
+    }
+    for (const migration of migrations) {
+      if (migration.version <= this.#schemaVersion) continue;
+      // One transaction per migration: a failed one leaves the file at the last good version, never in between.
+      db.exec('BEGIN');
+      try {
+        db.exec(migration.sql);
+        db.prepare('UPDATE meta SET value = ? WHERE key = ?').run(String(migration.version), 'schema_version');
+        db.exec('COMMIT');
+      } catch (error) {
+        db.exec('ROLLBACK');
+        db.close();
+        throw new Error(`migration to schema version ${migration.version} (${migration.description}) failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      this.#schemaVersion = migration.version;
+    }
   }
 
-  static open(path: string): Store {
-    return new Store(new DatabaseSync(path));
+  static open(path: string, migrations?: readonly Migration[]): Store {
+    return new Store(new DatabaseSync(path), migrations);
+  }
+
+  /** The schema version of this database after opening (and migrating) it. */
+  get schemaVersion(): number {
+    return this.#schemaVersion;
+  }
+
+  #readSchemaVersion(): number {
+    const row = this.#db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version') as { value: string } | undefined;
+    const version = Number.parseInt(row?.value ?? '', 10);
+    if (!Number.isInteger(version) || version < BASE_SCHEMA_VERSION) {
+      throw new Error(`the harness database has an unreadable schema_version (${String(row?.value)})`);
+    }
+    return version;
   }
 
   close(): void {
@@ -112,6 +156,7 @@ export class Store {
     provider?: string | null;
     apiVersion?: string | null;
     kitVersion?: string | null;
+    transport?: string | null;
     note?: string | null;
   }): SessionRow {
     const row: SessionRow = {
@@ -122,13 +167,14 @@ export class Store {
       provider: input.provider ?? null,
       apiVersion: input.apiVersion ?? null,
       kitVersion: input.kitVersion ?? null,
+      transport: input.transport ?? null,
     };
     this.#db
       .prepare(
-        `INSERT INTO sessions (id, started_at, permission_level, model, provider, api_version, kit_version, note)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO sessions (id, started_at, permission_level, model, provider, api_version, kit_version, transport, note)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(row.id, row.startedAt, row.permissionLevel, row.model, row.provider, row.apiVersion, row.kitVersion, input.note ?? null);
+      .run(row.id, row.startedAt, row.permissionLevel, row.model, row.provider, row.apiVersion, row.kitVersion, row.transport, input.note ?? null);
     return row;
   }
 

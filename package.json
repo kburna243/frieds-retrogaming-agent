@@ -8,7 +8,7 @@
     "node": ">=24"
   },
   "bin": {
-    "fagent": "dist/cli.js"
+    "fagent": "dist/bin.js"
   },
   "exports": {
     ".": "./dist/index.js"
@@ -20,11 +20,19 @@
     "test:watch": "vitest",
     "check": "npm run typecheck && npm run test && node tools/check-repo-rules.mjs",
     "lint": "node tools/check-repo-rules.mjs",
-    "cli": "node --no-warnings src/cli.ts"
+    "cli": "node --no-warnings src/cli.ts",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^5.9.0",
     "vitest": "^3.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.de.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ]
 }

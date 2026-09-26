@@ -1,4 +1,6 @@
 -- Harness memory. Sessions, messages, tool calls, plans and approvals — nothing of this lives in the kit.
+-- This file is schema version 1 and does not change any more: every later change is a migration in
+-- src/db/migrations.ts, so an older database and a new one end up with the same shape.
 -- The kit's source of truth is the machine itself (the doctor measures live); `kit_results` below is history,
 -- never current state, and no code may answer a question about the cabinet from it.
 

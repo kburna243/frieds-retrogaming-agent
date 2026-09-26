@@ -23,11 +23,12 @@ You are working on **frieds-retrogaming-agent**, the agent harness that drives a
 ```bash
 npm install          # dev deps only; there are no runtime dependencies
 npm run check        # typecheck + vitest + repo rule checker — this is the bar
-npm run test         # vitest run (87 tests, no network, no Windows needed)
+npm run test         # vitest run (97 tests, no network, no Windows needed)
 npm run typecheck    # tsc -p tsconfig.json (noEmit)
 npm run build        # tsc -p tsconfig.build.json + copy db/schema.sql to dist/
 npm run lint         # node tools/check-repo-rules.mjs
 npm run cli -- tools # run the CLI from source (Node ≥ 24 strips types)
+npm i -g .           # build and install the fagent command (bin: dist/bin.js)
 ```
 
 There is no formatter or linter dependency in this repo; `npm run lint` is our own rule checker. Do not add a
@@ -40,7 +41,7 @@ platform here.
 | --- | --- |
 | `src/kit/` | wire types, argv building, transports (stdio, MCP), catalog → tools |
 | `src/policy/` | the gate: `engine.ts`, `plan.ts`, `human.ts`, `errors.ts` |
-| `src/db/` | `schema.sql` + `store.ts` (SQLite via `node:sqlite`) |
+| `src/db/` | `schema.sql` (v1, frozen) + `migrations.ts` + `store.ts` (SQLite via `node:sqlite`) |
 | `src/llm/` | gateways, `redact.ts`, `scripted-model.ts` |
 | `src/agent/` | system prompt and the loop |
 | `test/kit/` | **the fake cabinet** — a second implementation of the API spec, used by every test |

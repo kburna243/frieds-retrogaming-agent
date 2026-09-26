@@ -26,8 +26,9 @@
 > [!NOTE]
 > **Stand: v0.1.0**, gegen ein echtes Kit auf einem Windows-Automaten geprüft. Client, Policy-Gate, SQLite-Gedächtnis,
 > CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt mit einer
-> Zusammenfassung der früheren (M1), und der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
-> Automaten gelaufen). Offen: Packaging und ein vollständiger Katalog-Snapshot von Kit v0.3.0. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
+> Zusammenfassung der früheren (M1), der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
+> Automaten gelaufen), `npm i -g .` installiert `fagent` (M2), und die Datenbank migriert sich selbst. Offen: ein
+> vollständiger Katalog-Snapshot von Kit v0.3.0. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
 > und die [ROADMAP](ROADMAP.md).
 
 ---
@@ -87,7 +88,8 @@ Modell verlässt gar nichts den PC.
 | **Modell-Gateways** | ✅ Stabil | lokales Ollama oder jeder OpenAI-kompatible Endpunkt; Cloud nur mit `-Anonymize` |
 | **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`; nirgends ein `--yes` |
 | **Fake-Automat** (`test/kit/`) | ✅ Stabil | die Kit-API als zweite Implementierung, damit alle Tests unter Linux laufen |
-| **Packaging** (globale Installation, `--version`) | 🚧 Geplant (M2) | siehe [ROADMAP](ROADMAP.md) |
+| **Packaging** (M2) | 🆕 Unveröffentlicht | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
+| **Datenbank-Migrationen** | 🆕 Unveröffentlicht | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
 | **MCP-Transport** (M4) | 🆕 Unveröffentlicht | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
 | **Berichtsmodus** (`fagent report`) | 🚧 Geplant (M6) | eine Zusammenfassung aus dem Audit-Trail, ohne Schreibzugriff aufs Kit |
 
@@ -110,29 +112,32 @@ Modell verlässt gar nichts den PC.
 ```bash
 npm install            # nur Entwicklungs-Abhängigkeiten: typescript, vitest, @types/node
 npm run check          # Typecheck + Tests + Repo-Regeln
+npm i -g .             # baut dist/ und installiert den Befehl fagent
+fagent --version
 ```
+Ohne globale Installation startet `node --no-warnings src/cli.ts <befehl>` dieselbe CLI aus den Quellen.
 
 ### 2. Den Automaten lesen (ohne Modell)
 ```bash
 export FAGENT_KIT_ROOT='D:\cabinet\frieds-retrogaming-kit'
-node --no-warnings src/cli.ts doctor          # was erreichbar ist, welche ApiVersion das Kit spricht
-node --no-warnings src/cli.ts doctor --transport mcp   # dasselbe über den MCP-Server des Kits (Kit >= 0.3.0)
-node --no-warnings src/cli.ts status          # der Gesundheitscheck des Kits, nur lesend
-node --no-warnings src/cli.ts tools --level operator
+fagent doctor                  # was erreichbar ist, welche ApiVersion das Kit spricht
+fagent doctor --transport mcp  # dasselbe über den MCP-Server des Kits (Kit >= 0.3.0)
+fagent status                  # der Gesundheitscheck des Kits, nur lesend
+fagent tools --level operator
 ```
 
 ### 3. Eine Änderung durch das Gate
 ```bash
-node --no-warnings src/cli.ts run step.lightgun.01-detect --level operator --param RetroBatRoot=C:\RetroBat
+fagent run step.lightgun.01-detect --level operator --param RetroBatRoot=C:\RetroBat
 ```
 Du siehst den Plan aus dem Dry Run des Kits und wirst einmal gefragt. Alles außer einem Ja lässt den Automaten, wie
 er war.
 
 ### 4. Mit dem Automaten reden
 ```bash
-node --no-warnings src/cli.ts chat --model qwen2.5:3b          # lokales Modell über Ollama
-node --no-warnings src/cli.ts chat --demo                      # ganz ohne Modell: eine geskriptete Diagnose
-node --no-warnings src/cli.ts history --last 20                # was der Harness getan hat, aus seiner Datenbank
+fagent chat --model qwen2.5:3b  # lokales Modell über Ollama
+fagent chat --demo              # ganz ohne Modell: eine geskriptete Diagnose
+fagent history --last 20        # was der Harness getan hat, aus seiner Datenbank
 ```
 `chat` beginnt mit einer kurzen Zusammenfassung der früheren Sitzungen; `--no-memory` beginnt ohne.
 

@@ -33,6 +33,15 @@ jobs:
         run: |
           node dist/cli.js status >status.out 2>&1 && exit 1
           grep -q "no kit root" status.out
+      - name: npm i -g . gives a fagent that runs from any folder (M2)
+        run: |
+          npm i -g . --prefix "$RUNNER_TEMP/global"
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/global/bin/fagent" --version | tee version.out
+          grep -q "fagent $(node -p "require('$GITHUB_WORKSPACE/package.json').version")" version.out
+          "$RUNNER_TEMP/global/bin/fagent" help >help.out 2>help.err
+          grep -q "fagent — the agent harness" help.out
+          if grep -q ExperimentalWarning help.err; then echo "the installed command prints the SQLite warning"; exit 1; fi
 
   windows:
     name: windows wiring (no cabinet here)
@@ -49,3 +58,11 @@ jobs:
         run: node --no-warnings src/cli.ts --help
       - name: the fake kit answers through a real child process
         run: node test/kit/fake-kit-process.mjs -NoProfile -ExecutionPolicy Bypass -File x\api\Invoke-KitApi.ps1 -Operation status
+      - name: npm i -g . gives a working fagent.cmd (M2)
+        shell: pwsh
+        run: |
+          npm i -g . --prefix "$env:RUNNER_TEMP\global"
+          Set-Location $env:RUNNER_TEMP
+          $out = & "$env:RUNNER_TEMP\global\fagent.cmd" --version
+          if ($out -notmatch '^fagent \d+\.\d+\.\d+') { throw "unexpected: $out" }
+          $out

@@ -9,6 +9,7 @@
 
 import process from 'node:process';
 import { createInterface } from 'node:readline';
+import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { HarnessConfig } from './config.ts';
 import { loadConfig, ConfigError } from './config.ts';
@@ -27,6 +28,10 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   if (unknown.length > 0) {
     fail(unknown.join('\n'));
     return 2;
+  }
+  if (command === 'version' || flags.version === 'true') {
+    process.stdout.write(`fagent ${harnessVersion()}\n`);
+    return 0;
   }
   if (!command || command === 'help' || flags.help === 'true') {
     printHelp((text) => process.stdout.write(text));
@@ -114,6 +119,7 @@ async function runDoctor(config: HarnessConfig, json: boolean): Promise<number> 
       level: 'OK',
       detail: `${harness.client.transport.label}${harness.kitVersion ? ` · kit ${harness.kitVersion}` : ''}`,
     });
+    rows.push({ area: 'schema', level: 'OK', detail: `harness database at schema version ${harness.store.schemaVersion}` });
     const wizardOnly = harness.catalog.filter((op) => op.Interactive).map((op) => op.Name);
     if (wizardOnly.length > 0) rows.push({ area: 'wizard-only', level: 'INFO', detail: wizardOnly.join(', ') });
     const unavailable = harness.catalog.filter((op) => !op.Available && !op.Interactive).map((op) => op.Name);
@@ -330,7 +336,26 @@ function reportError(error: unknown): number {
   return 1;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/** The harness version, from the package.json next to `src/` or `dist/` — the same file either way. */
+export function harnessVersion(): string {
+  const text = readFileSync(new URL('../package.json', import.meta.url), 'utf8');
+  return String((JSON.parse(text) as { version?: unknown }).version ?? 'unknown');
+}
+
+/**
+ * True when this file is the program Node started. A global install starts it through a symlink (npm's bin link)
+ * while `import.meta.url` is the real path, so both sides are resolved before they are compared.
+ */
+export function isEntryPoint(argv1: string | undefined, moduleUrl: string): boolean {
+  if (!argv1) return false;
+  try {
+    return pathToFileURL(realpathSync(argv1)).href === moduleUrl;
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint(process.argv[1], import.meta.url)) {
   main().then((code) => {
     process.exitCode = code;
   });

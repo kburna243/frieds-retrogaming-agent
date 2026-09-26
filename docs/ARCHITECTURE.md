@@ -62,7 +62,8 @@ kit's approval questions, verbatim, under a heading that says so. `human.ts` has
 
 ### `src/db/`
 
-`schema.sql` + a thin `Store`. `node:sqlite`, no ORM, no migrations table yet (there is one schema). The last table
+`schema.sql` (schema version 1, frozen) + `migrations.ts` (every later change, applied in order on open, one
+transaction each) + a thin `Store`. `node:sqlite`, no ORM. The last table
 matters conceptually: `kit_results` is **history, not state**. The current state of the cabinet is what `status`
 answers right now; a cached read here would be a bug waiting to happen.
 
@@ -106,6 +107,6 @@ thing left for the cabinet is `tools/Start-SmokeTest.ps1`.
   and the catalog's `ApiVersion`. The model never sees the server's tools; the harness builds its own from the catalog.
 - **No `apply`/`approved` in any public API on purpose.** There is no exported function that takes a boolean to
   skip the gate. If someone adds one, `tools/check-repo-rules.mjs` and the acceptance tests are the reviewers.
-- **One schema, no migration runner.** Version the table before shipping this on a second cabinet.
+- **Migrations only go forward.** A database written by a newer harness is refused, never read half-understood.
 - **`support.bundle` is a `Change`** because the kit says so, which means it needs a human yes. That is correct and
   slightly annoying; leave it.
