@@ -219,8 +219,8 @@ async function runChange(config: HarnessConfig, operation: string | undefined, f
 async function runChat(config: HarnessConfig, flags: Flags): Promise<number> {
   const human = new TerminalHumanGateway();
   const scripted = flags.demo === 'true' ? demoScript(config) : undefined;
-  const harness = await createHarness(config, { human, gateway: scripted ?? new ScriptedModelGateway([{ text: '' }]) });
-  const gateway = scripted ?? harness.gateway;
+  const harness = await createHarness(config, { human, gateway: scripted });
+  const gateway = harness.gateway;
 
   const loop = new AgentLoop({
     gateway: gateway as never,
@@ -247,8 +247,12 @@ async function runChat(config: HarnessConfig, flags: Flags): Promise<number> {
 
   if (flags.message) {
     const run = await loop.ask(String(flags.message));
-    if (flags.json === 'true') process.stdout.write(`${JSON.stringify({ session: harness.sessionId, ...run }, null, 2)}\n`);
-    print(`\n(${run.rounds} rounds · ${run.toolCalls} tool calls · ${run.refused} refused · audit: ${config.dbPath})`);
+    if (flags.json === 'true') {
+      process.stdout.write(`${JSON.stringify({ session: harness.sessionId, ...run }, null, 2)}\n`);
+    } else {
+      if (run.answer) process.stdout.write(`\n${run.answer.startsWith('\n') ? run.answer.slice(1) : run.answer}\n`);
+      print(`\n(${run.rounds} rounds · ${run.toolCalls} tool calls · ${run.refused} refused · audit: ${config.dbPath})`);
+    }
     harness.close();
     return 0;
   }
