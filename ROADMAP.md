@@ -12,6 +12,7 @@ guard, the fake cabinet and 128 tests. Unreleased: memory read back into a new s
 | # | Milestone | What "done" means |
 | --- | --- | --- |
 | M5 | **Scenarios** | A small eval folder: "gun does not work in game X", "pinball build to a second drive", "what changed since yesterday". Run against the fake cabinet with a real local model, asserting the *call order*, not the prose. |
+| 1.0 | **Release** | M5 has run against a real local model on the cabinet, the smoke test covers the new commands, the interactive chat has one input reader, and a tagged release with checksums exists. The checklist is "Until 1.0" in `docs/HANDOFF.md`. |
 
 ## Later, if it earns it
 

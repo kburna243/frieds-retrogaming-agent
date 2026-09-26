@@ -1,119 +1,144 @@
 # Handoff
 
-What is built, what is deliberately not, and how to continue — including in a cloud session without Windows and
+What is built, what is left until 1.0, and how to continue — including in a cloud session without Windows and
 without the cabinet.
 
 ## State (measured, not intended)
 
 | Thing | Status |
 | --- | --- |
-| Kit client over stdio (`api\Invoke-KitApi.ps1`, one process, one JSON document) | works, verified against a real kit |
-| Live catalog → tool definitions (9 fixed + `run_step`) | works: 33 operations, 23 steps, 21 callable, 10 tools at `operator`, 5 reads at `read-only` |
-| Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test |
+| Kit client over stdio (`api\Invoke-KitApi.ps1`, one process, one JSON document) | works, verified on the cabinet |
+| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and on the cabinet (`doctor`, `status`, a declined change; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
+| Live catalog → tool definitions (9 fixed + `run_step`) | works: 34 operations, 10 tools at `operator`, 5 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
+| Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test; `fagent run` uses the same gate through `PolicyEngine.runOperation` |
 | Interactive steps never callable | works, refused before any process starts |
-| SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'` |
-| Terminal UX (M3): streaming, `[round/max]`, `--max-rounds`, `chat --continue` / `--session`, `--json` on every command | works; tool calls reach the gate whole, a continued conversation carries words and never approvals, the CLI itself is tested through `main(argv, deps)` |
-| Report mode (M6): `fagent report [--since 7d] [--json]` | works; `src/report.ts` imports only the store and the memory wording, needs no kit root, says it is history and suggests nothing (tested) |
-| Schema migrations (`src/db/migrations.ts`) | works: a v1 database is brought to v2 (`sessions.transport`) on open, each step in a transaction; a newer database is refused |
-| Packaging (M2): `npm i -g .`, `fagent --version` | works; the bin link starts `dist/bin.js`, which hides only the SQLite experimental warning; CI installs it globally on Linux and Windows |
-| Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing (tested) |
-| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and **on the cabinet** (`doctor --transport mcp`: `mcp-stdio · kit 0.3.0`, 34 operations; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
-| Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
-| CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
-| Fake cabinet (`test/kit/`) — the API contract as a second implementation | works; every operation it offers has exactly the kind, availability and parameters of the pinned snapshot (tested), including `backup.remove` and `profile.*` of kit 0.3.0 |
+| SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'`; migrations up to schema version 3, a newer database is refused |
+| Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing |
+| Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; streaming with a JSON fallback; the cloud refusal is tested; a local model (`llama3.2:3b`) answered on the cabinet |
+| CLI `fagent`: `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version` | works; `--json` on every command, exit 0/1/2/3, no `--yes` anywhere |
+| Terminal (M3): streaming, `[round/max]`, `--max-rounds`, `chat --continue` / `--session` | works in tests; a continued conversation carries words and never approvals. **Not yet used on the cabinet** |
+| Report mode (M6): `fagent report [--since 7d] [--json]` | works; reads the database only, needs no kit root, suggests nothing |
+| Packaging (M2): `npm i -g .`, `fagent --version` | works; CI installs it globally on Linux and Windows |
+| Fake cabinet (`test/kit/`) — the API contract as a second implementation, with an MCP server | works; every operation it offers has the kind, availability and parameters of the pinned snapshot (tested) |
 | Tests | **128 passed**, 12 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
-| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 63 files |
-| Pinned contract (`contract/`) | kit 0.3.0, commit `b5df22f4…`, ApiVersion 1.0, 34 operations; made by the fixed updater (asks the kit) |
+| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 83 files |
+| Pinned contract (`contract/`) | kit 0.3.0, commit `b5df22f4…`, ApiVersion 1.0, 34 operations; made by the updater that asks the kit |
+| Website (`website/`) | published to GitHub Pages by `.github/workflows/deploy-pages.yml` |
 
-Checked on a real Windows machine against a real kit: `status` read the doctor live; a step whose precondition was not
-met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOWNABLE`) instead of asking to apply;
-`support.bundle` produced a plan, was declined by typing `no`, applied nothing, and both calls are in `history`. Typing
-`yes` instead wrote the bundle, reported `applied: Done` and verified with a fresh `status` — which is also how the
-read-only bug in the table above was found: the refusal was safe but said `UNKNOWN_OPERATION`, and a rule should never
-sound like a missing feature.
+## Until 1.0: what is left
 
-## The kit moved: v0.3.0
+Everything on the roadmap except M5 is built. What stands between `main` and a 1.0 is below, sorted by who can do
+it. A box is ticked when the thing is done *and* recorded here or in the CHANGELOG.
 
-Compared by reading the kit's repository (not the cabinet), between `c019818` (the old snapshot) and `7e7d546`
-(release v0.3.0):
+### A cloud session can do these
 
-- **New operation `backup.remove`** (Change, `Path`). In the fake cabinet; **not offered to the model** (it deletes
-  something), only a person runs it with `fagent run backup.remove --param Path=…`. The same holds for
-  `backup.export`, which never had a tool.
-- **`profile.import` / `profile.export` are available** with their commands' parameters. `profile.export` has no
-  dry run of its own, so its plan is the call. `profile.import`'s rows count: a `NeedsUser` row (a missing driver
-  without `AutoInstall`) means no plan, and the gate passes the kit's warning to the model. With `AutoInstall` the
-  installer question is part of the plan and `-Approved` goes out only with the yes. All in `test/kit-v030.test.ts`.
-- **An MCP server** (`api\Start-KitMcpServer.ps1`, stdio, JSON-RPC 2.0). M4 is built on it, see below.
-- **`ApiVersion` is still `1.0`** although an operation was added. That is the kit's to fix; the issue text is in
-  [KIT-REQUESTS.md](KIT-REQUESTS.md).
+- [ ] **M5: scenarios.** Three cabinet problems as repeatable evals — "my gun does not work in game X", "move the
+  pinball build to a second drive", "what changed since yesterday". Each is a user message, a fake-kit state and the
+  expected *sequence* of kit calls (`callTrace()`), never the prose. They run against the fake cabinet with a real
+  local model when `FAGENT_EVAL_MODEL` is set and are skipped otherwise, so `npm run check` stays offline. The prompt
+  for this is further down.
+- [ ] **Interactive chat and the plan question share one input.** In `fagent chat` without `--message`, the chat
+  reads stdin with one `readline` and `TerminalHumanGateway` opens a second one for "Apply this exact change?". It
+  works in the tests (they never reach the terminal path) but has not been tried by a person. Pass the chat's
+  interface to the human gateway so there is exactly one reader, and cover it with a test that feeds stdin.
+- [ ] **Smoke test for the new commands.** `tools/Start-SmokeTest.ps1` knows six steps from 0.1.0. Add `doctor
+  --transport mcp`, `status --json` (parse it), `report --since 1d`, `version`, and `history --json`, so one run on
+  the cabinet checks everything that cannot run in CI.
+- [ ] **Release 1.0 (preparation).** Bump `VERSION` and `package.json` together (the rule checker insists), turn
+  *Unreleased* in the CHANGELOG into the version, and add a release workflow like the kit's (tag → build → a tarball
+  from `npm pack` with `SHA256SUMS.txt`). Pushing the tag stays with a person.
 
-The first refresh to 0.3.0 missed part of the catalog, because `tools/Update-ContractSnapshot.ps1` rebuilt it from a
-hand-written list. It now asks the kit at the pinned commit (a temporary git worktree runs its own
-`Invoke-KitApi.ps1 -Operation operations`), and the snapshot on `main` was made that way.
+### Only a person at the cabinet can do these
 
-## M4: the MCP transport
+- [ ] **One change with a yes over MCP:** `fagent run support.bundle --transport mcp --level operator`, type `yes`,
+  then check `fagent history` and what the kit wrote. Over stdio this was done for 0.1.0; over MCP only a *no* was
+  tried.
+- [ ] **Two evenings with the local model:** `fagent chat --model llama3.2:3b` on the first, `fagent chat --continue`
+  on the second. The second should know what the first did, and a change must still ask again.
+- [ ] **Run M5 against the real model** once it exists: `FAGENT_EVAL_MODEL=llama3.2:3b npm test`, and write down
+  which scenarios the model gets right. That is the honest measure of "does it help".
+- [ ] **The smoke test**, once extended:
+  `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
+- [ ] **After every kit release:** `tools\Test-ContractDrift.ps1`, and `tools\Update-ContractSnapshot.ps1` when it
+  drifted. Then a cloud session brings the fake cabinet along.
 
-`src/kit/mcp-transport.ts`, switched on with `--transport mcp` or `FAGENT_TRANSPORT=mcp`; stdio stays the default
-and the reference. Decisions, each tested in `test/mcp-transport.test.ts` against `test/kit/fake-kit-mcp.mjs` (the
-server as a real child process):
+### Decisions only a person can make
 
-- **The catalog still comes from `Invoke-KitApi.ps1`.** The server leaves out `operations`, and with it `Interactive`
-  and the catalog's `ApiVersion`. Reconstructing them from `tools/list` would be inventing protocol, so the MCP
-  transport hands `operations` to the stdio transport. The ApiVersion pin works exactly as before.
-- **`apply`/`approved` are filled by the transport from `KitRequest`**, which only `PolicyEngine` sets. A parameter
-  whose name is `apply` or `approved` in any case is refused before anything is sent: the server compares like
-  PowerShell does, so a step parameter `Apply` would otherwise become the flag.
-- **Anonymizing is fixed when the server starts.** A call that must be anonymized is refused by a server started with
-  `-NoAnonymize`; it never falls back to real paths.
-- **At level `read-only` the server is started with `-ReadOnly`**, so it has no change tool at all.
-- **The kit version comes from the kit:** `serverInfo.version` in `initialize` lands in the session row. With stdio
-  it stays `null`.
-- There are no exit codes over MCP. The transport reports 0 / 1 / 2 from the result, so `history` reads the same.
+- [ ] **The version number.** 1.0.0 says "the gate and the contract are stable"; 0.2.0 says "more to come". Both are
+  honest; 1.0 is justified once M5 ran against a real model.
+- [ ] **Publish to npm or not.** Today the install is `npm i -g .` from a checkout. Publishing needs a package name
+  and an npm account; it is not required for 1.0.
+- [ ] **The first real conversation.** Which problem should the harness solve first on the cabinet? Everything above
+  is plumbing for that question, and M5's scenarios should come from it.
 
-Run on the cabinet on 2026-09-26: `doctor` and `status` over MCP, and `support.bundle` through the gate with a no ([LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Still worth doing once: a change with a yes over MCP.
+### Waiting on the kit
 
-## The acceptance criteria from the handoff, and where they are proven
+Filed as issues on the kit; nothing to do here until the kit ships them ([KIT-REQUESTS.md](KIT-REQUESTS.md)):
 
-All seven are `test/acceptance.test.ts`, and all seven pass here on Windows and on Linux in CI.
+- [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21) `ApiVersion` should be 1.1 since v0.3.0.
+- [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22) the kit's version through the API — then
+  `kitVersion` is filled over stdio too (over MCP it already is).
+- [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23) `apply`/`approved` can collide with a parameter
+  name in the MCP server (the harness refuses such names already).
+
+When one ships: refresh `contract/`, move the entry in KIT-REQUESTS.md to *Done*, and for #22 read `KitVersion` from
+the catalog in `src/harness.ts`.
+
+## Decisions worth knowing before you change something
+
+- **The catalog always comes from `Invoke-KitApi.ps1`,** also with `--transport mcp`: the MCP server leaves out
+  `operations`, and with it `Interactive` and the catalog's `ApiVersion`. Rebuilding them from `tools/list` would be
+  inventing protocol.
+- **`apply`/`approved` over MCP are filled by the transport from `KitRequest`,** which only `PolicyEngine` sets. A
+  parameter named `apply` or `approved` in any case is refused before anything is sent.
+- **Anonymizing over MCP is fixed when the server starts.** A call that must be anonymized is refused by a server
+  started with `-NoAnonymize`. At level `read-only` the server runs with `-ReadOnly`.
+- **`backup.remove` and `backup.export` are not model tools.** A person runs them with `fagent run`. A model that
+  asks for them through `run_step` gets `NOT_OFFERED` and the command to hand on.
+- **`profile.export` has no dry run of its own,** so its plan is the call. A `NeedsUser` row from `profile.import`
+  (a missing driver without `AutoInstall`) means no plan, and the model gets the kit's warning.
+- **A continued chat carries words only.** Tool answers stay behind (they are history), approvals never travel in
+  messages, and a cloud model only gets messages that were recorded anonymized.
+- **The memory digest is history, not state,** and the gate never reads it. A remembered yes grants nothing.
+
+## The acceptance criteria, and where they are proven
+
+All seven are `test/acceptance.test.ts`, and all seven pass on Windows and on Linux in CI.
 
 1. **Works offline with a local model.** No module outside `src/llm/` may import anything that reaches a network; a
    test scans the sources and the suite runs with a scripted model.
 2. **Every change shows dry run → plan → yes → `-Apply` → verify, and a model cannot skip it.** Proven by asserting
    the *sequence* of kit calls, by refusing an `apply` smuggled in as a parameter, and by showing that `-Approved`
    appears only when the kit really asked for an approval.
-3. **A cloud provider only ever sees `-Anonymize` results.** The fake cabinet deliberately carries an invented
-   person; the test asserts the un-anonymized call *does* leak, that an anonymizing session does not, and that a
-   cloud gateway refuses to send an un-anonymized body at all.
+3. **A cloud provider only ever sees `-Anonymize` results.** The fake cabinet carries an invented person; the test
+   asserts the un-anonymized call *does* leak, that an anonymizing session does not, and that a cloud gateway refuses
+   to send an un-anonymized body at all.
 4. **A different ApiVersion major refuses every tool.** `2.0` is turned down during the very first catalog read,
    before a session exists; `1.x` is accepted.
 5. **Every tool call and approval is logged with a timestamp.** Reads, dry runs, applies, decisions and refusals all
    land in the database, and the database itself rejects a decision that did not come from a human.
 6. **Reads are free, interactive steps are never callable.**
-7. **"My gun does not work in game X" works end to end.** The trace the handoff describes, in order:
-   `operations` (once, at start) → `status` → `components` → dry run → apply → `status`.
+7. **"My gun does not work in game X" works end to end:** `operations` (once, at start) → `status` → `components` →
+   dry run → apply → `status`.
 
 ## What is deliberately unfinished
 
-Not oversights — decisions, each with its reason.
+Not oversights — decisions, each with its reason. None of them blocks 1.0.
 
-- **MCP is off by default.** stdio is the reference until the MCP transport has run on the cabinet. Even with
-  `--transport mcp`, one `Invoke-KitApi.ps1` process answers the catalog at start.
-- **Memory is a digest, not a search.** `src/agent/memory.ts` summarizes the last five sessions into the system
-  prompt (M1). There is no retrieval by topic and no memory tool for the model; add one only if a real conversation
-  shows the digest is not enough. `recentToolCalls()` is still unused — the digest reads per session.
-- **No shell completion and no npm publish.** `npm i -g .` from a checkout is the install. Publishing to the npm
-  registry is a decision for a person, not a milestone.
-- **`kitVersion` is `null` in a session row over stdio.** API v1 does not report it, and reading `VERSION` from the
-  kit's folder would cross the boundary. Over MCP the server says it. The request to the kit is written up in [KIT-REQUESTS.md](KIT-REQUESTS.md) — do
-  not work around it here.
-- **Migrations only go forward.** There is no downgrade: a database touched by a newer harness is refused by an older
-  one (`SchemaTooNewError`). Keep a copy of the `.db` file before trying a pre-release.
+- **MCP is off by default.** stdio is the reference; MCP is there for a long-lived kit process and a kit version in
+  the session row.
+- **Memory is a digest, not a search.** There is no retrieval by topic and no memory tool for the model; add one only
+  if a real conversation shows the digest is not enough.
+- **No shell completion.** `fagent help` lists everything.
+- **Harness-side strings are English.** The kit's own messages come in German with `--culture de-DE`, and the model
+  is told to answer in German; the harness's own lines are a later pass (ROADMAP, "Later").
+- **Migrations only go forward.** A database touched by a newer harness is refused by an older one
+  (`SchemaTooNewError`). Keep a copy of the `.db` file before trying a pre-release.
 
 ## How to work on this in a cloud session
 
-The cabinet is a Windows 11 machine with Windows PowerShell 5.1. The kit does not run on Linux. **That is fine and
+The cabinet is a Windows 11 machine with Windows PowerShell 5.1, and the kit does not run on Linux. **That is fine and
 by design:** everything in this repository is testable against `test/kit/`, which speaks the same contract.
 
 ```bash
@@ -130,6 +155,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 - No real paths, users, host names, IPs or tokens in files, tests, docs or commit messages. Synthetic only:
   `D:\cabinet\frieds-retrogaming-kit`, `D:\Pinball`, `C:\RetroBat`, the invented `Friedhelm` in `test/kit/`.
 - When you change a gate, change its test in the same commit and assert the call sequence (`callTrace()`).
+- The CLI is tested through `main(argv, deps)` with the fake cabinet, a scripted model and a scripted person.
 
 ### Paste this into Claude Code (cloud session)
 
@@ -162,26 +188,11 @@ state and the expected *sequence* of kit calls (callTrace()), never the prose. T
 with a real local model when FAGENT_EVAL_MODEL is set, and are skipped otherwise, so `npm run check` stays offline.
 A scenario passes when the call order matches and nothing was applied without the scripted person's yes.
 
-Finish by updating docs/HANDOFF.md (state table, and move M5 out of "next") and CHANGELOG.md, then
+Finish by ticking the box in docs/HANDOFF.md ("Until 1.0"), updating the state table and CHANGELOG.md, then
 `npm run check` again. Report which commands you ran and what they printed. Do not push.
 ```
 
-M1 (memory), M2 (packaging), M3 (terminal UX), M4 (MCP transport) and M6 (report) are done, and the database has a
-migration runner. M5 is the last milestone of this roadmap.
-
-## What only a human can do
-
-Neither here nor in any cloud session:
-
-1. Run the smoke test on the cabinet:
-   `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
-2. Run one change through the gate for real, type `yes`, and look at what the kit wrote and at `fagent history`.
-3. Run `tools\Test-ContractDrift.ps1` after the kit releases, and refresh `contract/` with
-   `tools\Update-ContractSnapshot.ps1` when it drifted.
-4. Run one change with a yes over MCP (`fagent run … --transport mcp --level operator`), and try `fagent chat
-   --continue` with the local model: the second evening should start where the first one stopped.
-5. Watch the kit issues #21–#23 ([KIT-REQUESTS.md](KIT-REQUESTS.md)) and move them to *Done* when the kit ships them.
-6. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
+For the other cloud items in "Until 1.0", replace the M5 paragraph with the item's text; the rest of the block stays.
 
 ## Who owns what
 

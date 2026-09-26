@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/kburna243/frieds-retrogaming-kit/main/docs/images/character-controller.svg" alt="Maskottchen von Fried's Retrogaming Kit" width="140" style="margin-bottom: 12px;" />
+  <img src="website/public/assets/mascot/character-controller.svg" alt="Maskottchen von Fried's Retrogaming" width="140" style="margin-bottom: 12px;" />
   <h1>🤖 Fried's Retrogaming Agent</h1>
   <p><strong>Ein Modell, das deinen Automaten untersucht, und ein Gate, das dafür sorgt, dass du ja sagst</strong></p>
 
@@ -10,6 +10,7 @@
   [![Dokumentation](https://img.shields.io/badge/Doku-English%20%7C%20Deutsch-3DDC84?style=for-the-badge&logo=gitbook&logoColor=white)](docs/)
   [![CI](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/ci.yml)
   [![Mensch entscheidet](https://img.shields.io/badge/--yes-gibt%20es%20nicht-FFC857?style=for-the-badge)](docs/POLICY.md)
+  [![Website](https://img.shields.io/badge/Website-kburna243.github.io%2Ffrieds--retrogaming--agent-ff2d95?style=for-the-badge&logo=googlechrome&logoColor=white)](https://kburna243.github.io/frieds-retrogaming-agent/)
 
   <p>
     <a href="README.md"><strong>English</strong></a> •
@@ -17,6 +18,7 @@
     <a href="docs/POLICY.md"><strong>Policy</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architektur</strong></a> •
     <a href="docs/HANDOFF.md"><strong>Übergabe</strong></a> •
+    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Website</strong></a> •
     <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>Das Kit</strong></a>
   </p>
 </div>
@@ -24,13 +26,11 @@
 ---
 
 > [!NOTE]
-> **Stand: v0.1.0**, gegen ein echtes Kit auf einem Windows-Automaten geprüft. Client, Policy-Gate, SQLite-Gedächtnis,
-> CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt mit einer
-> Zusammenfassung der früheren (M1), der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
-> Automaten gelaufen), `npm i -g .` installiert `fagent` (M2), `fagent report` fasst einen Zeitraum zusammen (M6),
-> und die Datenbank migriert sich selbst. Der Vertrag ist auf Kit v0.3.0 festgeschrieben. Streaming und `chat --continue`
-> sind drin (M3). Offen: Szenarien (M5). Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
-> und die [ROADMAP](ROADMAP.md).
+> **Stand: v0.1.0, das nächste Release liegt auf `main`.** Der Harness läuft an einem echten Windows-Automaten mit
+> Kit v0.3.0, über stdio und über den MCP-Server des Kits, und mit einem lokalen Modell über Ollama. Seit v0.1.0 auf
+> `main`: Gedächtnis über Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport,
+> `fagent report` und Datenbank-Migrationen. Offen bis 1.0: wiederholbare Szenarien mit einem echten Modell (M5) und
+> ein Release. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -87,11 +87,13 @@ Modell verlässt gar nichts den PC.
 | **Gedächtnis** (SQLite über `node:sqlite`) | ✅ Stabil | Sitzungen, Nachrichten, Tool-Aufrufe, Pläne, Freigaben, Kit-Ergebnisse, alle mit Zeitstempel |
 | **Gedächtnis wird gelesen** (M1) | 🆕 Unveröffentlicht | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
 | **Modell-Gateways** | ✅ Stabil | lokales Ollama oder jeder OpenAI-kompatible Endpunkt; Cloud nur mit `-Anonymize` |
-| **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`; nirgends ein `--yes` |
+| **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version`; `--json` bei jedem Befehl; nirgends ein `--yes` |
 | **Fake-Automat** (`test/kit/`) | ✅ Stabil | die Kit-API als zweite Implementierung, damit alle Tests unter Linux laufen |
 | **Packaging** (M2) | 🆕 Unveröffentlicht | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
+| **Terminal** (M3) | 🆕 Unveröffentlicht | Antworten erscheinen, während sie entstehen, `[Runde/Max]` bei jedem Tool-Aufruf, `chat --continue` nimmt die Worte des letzten Gesprächs mit |
 | **Datenbank-Migrationen** | 🆕 Unveröffentlicht | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
-| **MCP-Transport** (M4) | 🆕 Unveröffentlicht | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
+| **MCP-Transport** (M4) | 🆕 Unveröffentlicht · am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
+| **Szenarien** (M5) | 🚧 Geplant | drei Automaten-Probleme als wiederholbare Evals mit einem echten lokalen Modell, geprüft wird die Reihenfolge der Kit-Aufrufe |
 | **Berichtsmodus** (M6) | 🆕 Unveröffentlicht | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
 
 ---
@@ -161,13 +163,14 @@ Der vollständige Windows-Check, am Automaten:
 | :--- | :--- |
 | `src/kit/` | API-Client: argv-Bau, One-Shot-stdio-Transport, MCP-Transport, `OperationResult`-Parsing, Katalog → Tool-Schemata |
 | `src/policy/` | das Gate: erst Dry Run, Plan, ein Ja eines Menschen, dann `-Apply`, dann Verifikation |
-| `src/db/` | SQLite-Gedächtnis über `node:sqlite` |
+| `src/db/` | SQLite-Gedächtnis über `node:sqlite`, mit nummerierten Migrationen |
 | `src/llm/` | Modell-Gateways, die Anonymisierungs-Prüfung, ein Skript-Modell für Tests |
 | `src/agent/` | die Schleife, der System-Prompt und die Gedächtnis-Zusammenfassung |
 | `src/cli.ts` | `fagent` |
 | `contract/` | festgeschriebener Snapshot der Kit-API, mit Herkunftsangabe |
 | `test/kit/` | **der Fake-Automat**: die Kit-API in reinem JS |
 | `tools/` | Snapshot-Aktualisierung, Drift-Test, Regel-Prüfung, Windows-Smoke-Test |
+| `website/` | die Projekt-Website (Vite), veröffentlicht über GitHub Pages |
 
 ---
 
@@ -205,15 +208,18 @@ Die Dokumente unter `docs/` sind auf Englisch.
 
 ## 🤝 Danke
 
-- **[Fried's Retrogaming Kit](https://github.com/kburna243/frieds-retrogaming-kit)**: Alles, was dieser Harness an
-  einem Automaten kann, macht das Kit. Das Maskottchen gehört dem Kit.
-- **[Ollama](https://ollama.com/)**, damit Modelle direkt auf dem Automaten laufen.
-- **Node.js** für `node:sqlite` und Type Stripping, weshalb dieses Repository ohne Laufzeit-Abhängigkeiten auskommt.
+- **[Fried's Retrogaming Kit](https://github.com/kburna243/frieds-retrogaming-kit)** macht die eigentliche Arbeit am
+  Automaten. Dieser Harness fragt es nur, über seine API.
+- **[Ollama](https://ollama.com/)** lässt das Sprachmodell direkt auf dem Automaten laufen, damit nichts den PC
+  verlassen muss.
+- **[Node.js](https://nodejs.org/)** bringt SQLite und TypeScript-Unterstützung von Haus aus mit. Deshalb hat dieses
+  Repository keine Laufzeit-Abhängigkeiten.
+- **[Vite](https://vite.dev/)** und **[React](https://react.dev/)** bauen die [Website](https://kburna243.github.io/frieds-retrogaming-agent/).
 
 ---
 
 ## 📄 Lizenz
 
-Dieses Projekt steht unter der **MIT-Lizenz**.
-Details in der Datei [LICENSE](LICENSE).
-Copyright (c) 2026 Friedrich Börner.
+Dieses Projekt steht unter der **MIT-Lizenz**; der vollständige Text steht in [LICENSE](LICENSE).
+
+Copyright (c) 2026 Friedrich Börner

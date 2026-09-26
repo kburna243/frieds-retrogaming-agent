@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/kburna243/frieds-retrogaming-kit/main/docs/images/character-controller.svg" alt="Fried's Retrogaming Kit mascot" width="140" style="margin-bottom: 12px;" />
+  <img src="website/public/assets/mascot/character-controller.svg" alt="Fried's Retrogaming mascot" width="140" style="margin-bottom: 12px;" />
   <h1>🤖 Fried's Retrogaming Agent</h1>
   <p><strong>A model that diagnoses your cabinet, and a gate that makes sure you are the one who says yes</strong></p>
 
@@ -10,6 +10,7 @@
   [![Documentation](https://img.shields.io/badge/Docs-English%20%7C%20Deutsch-3DDC84?style=for-the-badge&logo=gitbook&logoColor=white)](docs/)
   [![CI](https://img.shields.io/github/actions/workflow/status/kburna243/frieds-retrogaming-agent/ci.yml?branch=main&style=for-the-badge&label=CI)](https://github.com/kburna243/frieds-retrogaming-agent/actions/workflows/ci.yml)
   [![Human in the loop](https://img.shields.io/badge/--yes-does%20not%20exist-FFC857?style=for-the-badge)](docs/POLICY.md)
+  [![Website](https://img.shields.io/badge/Website-kburna243.github.io%2Ffrieds--retrogaming--agent-ff2d95?style=for-the-badge&logo=googlechrome&logoColor=white)](https://kburna243.github.io/frieds-retrogaming-agent/)
 
   <p>
     <a href="README.md"><strong>English</strong></a> •
@@ -17,6 +18,7 @@
     <a href="docs/POLICY.md"><strong>Policy</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architecture</strong></a> •
     <a href="docs/HANDOFF.md"><strong>Handoff</strong></a> •
+    <a href="https://kburna243.github.io/frieds-retrogaming-agent/"><strong>Website</strong></a> •
     <a href="https://github.com/kburna243/frieds-retrogaming-kit"><strong>The Kit</strong></a>
   </p>
 </div>
@@ -24,11 +26,11 @@
 ---
 
 > [!NOTE]
-> **Status: v0.1.0**, verified against a real kit on a Windows cabinet. The client, the policy gate, the SQLite
-> memory, the CLI and the full test suite work. New and not yet released: a new session starts from a digest of the
-> earlier ones (M1), the kit's MCP server can be used as transport (M4, not yet run on a cabinet), `npm i -g .`
-> installs `fagent` (M2), `fagent report` summarizes a period (M6), and the database migrates itself. The contract
-> is pinned to kit v0.3.0. Streaming and `chat --continue` are in (M3). Open: scenarios (M5). See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> **Status: v0.1.0, with the next release on `main`.** The harness runs on a real Windows cabinet against kit
+> v0.3.0, over stdio and over the kit's MCP server, and with a local model through Ollama. On `main` since v0.1.0:
+> memory across sessions, `npm i -g .`, streaming and `chat --continue`, the MCP transport, `fagent report` and
+> database migrations. Still open before 1.0: repeatable scenarios with a real model (M5) and a release. See
+> [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -84,11 +86,13 @@ PC at all.
 | **Memory** (SQLite via `node:sqlite`) | ✅ Stable | sessions, messages, tool calls, plans, approvals, kit results, all timestamped |
 | **Memory read back** (M1) | 🆕 Unreleased | a new session starts from a fixed-size digest of the last ones; a remembered yes grants nothing |
 | **Model gateways** | ✅ Stable | local Ollama or any OpenAI-compatible endpoint; cloud only with `-Anonymize` |
-| **CLI `fagent`** | ✅ Stable | `doctor`, `tools`, `status`, `run`, `chat`, `history`; no `--yes` anywhere |
+| **CLI `fagent`** | ✅ Stable | `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version`; `--json` on every command; no `--yes` anywhere |
 | **Fake cabinet** (`test/kit/`) | ✅ Stable | the kit API as a second implementation, so all tests run on Linux |
 | **Packaging** (M2) | 🆕 Unreleased | `npm i -g .` installs `fagent`, `fagent --version`; checked on Linux and Windows in CI |
+| **Terminal** (M3) | 🆕 Unreleased | answers stream in, `[round/max]` on every tool call, `chat --continue` carries the words of the last conversation |
 | **Database migrations** | 🆕 Unreleased | an older harness database is brought forward on open; a newer one is refused |
-| **MCP transport** (M4) | 🆕 Unreleased | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
+| **MCP transport** (M4) | 🆕 Unreleased · verified on the cabinet | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
+| **Scenarios** (M5) | 🚧 Planned | three cabinet problems as repeatable evals with a real local model, asserting the order of kit calls |
 | **Report mode** (M6) | 🆕 Unreleased | `fagent report --since 7d` summarizes a period from the audit trail; reads the database only, no kit root needed |
 
 ---
@@ -156,13 +160,14 @@ The full Windows check, on the cabinet:
 | :--- | :--- |
 | `src/kit/` | the API client: argv building, one-shot stdio transport, MCP transport, `OperationResult` parsing, catalog → tool schemas |
 | `src/policy/` | the gate: dry run first, plan, one human yes, then `-Apply`, then verify; every rule lives here |
-| `src/db/` | SQLite memory via `node:sqlite` |
+| `src/db/` | SQLite memory via `node:sqlite`, with numbered migrations |
 | `src/llm/` | model gateways, the anonymization guard, a scripted model for tests |
 | `src/agent/` | the loop, the system prompt and the memory digest |
 | `src/cli.ts` | `fagent` |
 | `contract/` | pinned snapshot of the kit API, with provenance |
 | `test/kit/` | **the fake cabinet**: the kit API reimplemented in plain JS |
 | `tools/` | contract snapshot updater, drift test, repo rule checker, Windows smoke test |
+| `website/` | the project website (Vite), published to GitHub Pages |
 
 ---
 
@@ -198,15 +203,17 @@ The full Windows check, on the cabinet:
 
 ## 🤝 Credits
 
-- **[Fried's Retrogaming Kit](https://github.com/kburna243/frieds-retrogaming-kit)**: everything this harness can do
-  on a cabinet, the kit does. The mascot is the kit's.
-- **[Ollama](https://ollama.com/)** for running models on the cabinet itself.
-- **Node.js** for `node:sqlite` and type stripping, which is why this repository has no runtime dependencies.
+- **[Fried's Retrogaming Kit](https://github.com/kburna243/frieds-retrogaming-kit)** does the actual work on the
+  cabinet. This harness only asks it, through its API.
+- **[Ollama](https://ollama.com/)** runs the language model on the cabinet itself, so nothing has to leave the PC.
+- **[Node.js](https://nodejs.org/)** brings SQLite and TypeScript support out of the box, which is why this repository
+  has no runtime dependencies.
+- **[Vite](https://vite.dev/)** and **[React](https://react.dev/)** build the [website](https://kburna243.github.io/frieds-retrogaming-agent/).
 
 ---
 
 ## 📄 License
 
-This project is licensed under the terms of the **MIT License**.
-See the [LICENSE](LICENSE) file for details.
-Copyright (c) 2026 Friedrich Börner.
+This project is licensed under the **MIT License**; see [LICENSE](LICENSE) for the full text.
+
+Copyright (c) 2026 Friedrich Börner
