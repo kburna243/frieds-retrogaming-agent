@@ -15,14 +15,17 @@ without the cabinet.
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
 | CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation | works, cross-checked against the pinned snapshot |
-| Tests | **67 passed**, 5 files, no network, no Windows, ~2 s |
+| Tests | **68 passed**, 5 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 56 files |
 | Pinned contract (`contract/`) | kit 0.2.0, commit `c0198187…`, ApiVersion 1.0; identical to the live catalog when compared with `tools/Test-ContractDrift.ps1` |
 
 Checked on a real Windows machine against a real kit: `status` read the doctor live; a step whose precondition was not
 met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOWNABLE`) instead of asking to apply;
-`support.bundle` produced a plan, was declined by typing `no`, applied nothing, and both calls are in `history`.
+`support.bundle` produced a plan, was declined by typing `no`, applied nothing, and both calls are in `history`. Typing
+`yes` instead wrote the bundle, reported `applied: Done` and verified with a fresh `status` — which is also how the
+read-only bug in the table above was found: the refusal was safe but said `UNKNOWN_OPERATION`, and a rule should never
+sound like a missing feature.
 
 ## The acceptance criteria from the handoff, and where they are proven
 
@@ -67,7 +70,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 67 tests + repo rules — this is the bar
+npm run check        # typecheck + 68 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -85,7 +88,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 67 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 68 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -102,7 +105,7 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 67 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 68 passing tests. If anything fails, fix that
 before you start.
 
 Then do milestone M1 from docs/HANDOFF.md: make the stored memory useful. A new session should start from a
