@@ -26,11 +26,12 @@
 ---
 
 > [!NOTE]
-> **Stand: v0.1.0, das nächste Release liegt auf `main`.** Der Harness läuft an einem echten Windows-Automaten mit
-> Kit v0.3.0, über stdio und über den MCP-Server des Kits, und mit einem lokalen Modell über Ollama. Seit v0.1.0 auf
-> `main`: Gedächtnis über Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport,
-> `fagent report` und Datenbank-Migrationen. Offen bis 1.0: wiederholbare Szenarien mit einem echten Modell (M5) und
-> ein Release. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
+> **Stand: v0.2.0 auf `main`, das Tag fehlt noch.** Der Harness läuft an einem echten Windows-Automaten mit Kit
+> v0.3.1 (ApiVersion 1.1), über stdio und über den MCP-Server des Kits, und mit einem lokalen Modell über Ollama.
+> Seit v0.1.0: Gedächtnis über Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport,
+> `fagent report`, Datenbank-Migrationen und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge
+> seiner Kit-Aufrufe messen. Was bis 1.0 fehlt, passiert an einem Automaten und nicht im Cloud-Zugang: siehe
+> [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -85,16 +86,16 @@ Modell verlässt gar nichts den PC.
 | **Tools aus dem Live-Katalog** | ✅ Stabil | 9 feste Tools plus `run_step`; die Stufe read-only bietet nur Lese-Tools |
 | **Policy-Gate** | ✅ Jede Stufe durch einen Test festgenagelt | Stufe → Katalog → Parameter → Dry Run → Plan → Mensch → `-Apply` → Verifikation |
 | **Gedächtnis** (SQLite über `node:sqlite`) | ✅ Stabil | Sitzungen, Nachrichten, Tool-Aufrufe, Pläne, Freigaben, Kit-Ergebnisse, alle mit Zeitstempel |
-| **Gedächtnis wird gelesen** (M1) | 🆕 Unveröffentlicht | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
+| **Gedächtnis wird gelesen** (M1) | 🆕 In 0.2.0 | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
 | **Modell-Gateways** | ✅ Stabil | lokales Ollama oder jeder OpenAI-kompatible Endpunkt; Cloud nur mit `-Anonymize` |
 | **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version`; `--json` bei jedem Befehl; nirgends ein `--yes` |
 | **Fake-Automat** (`test/kit/`) | ✅ Stabil | die Kit-API als zweite Implementierung, damit alle Tests unter Linux laufen |
-| **Packaging** (M2) | 🆕 Unveröffentlicht | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
-| **Terminal** (M3) | 🆕 Unveröffentlicht | Antworten erscheinen, während sie entstehen, `[Runde/Max]` bei jedem Tool-Aufruf, `chat --continue` nimmt die Worte des letzten Gesprächs mit |
-| **Datenbank-Migrationen** | 🆕 Unveröffentlicht | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
-| **MCP-Transport** (M4) | 🆕 Unveröffentlicht · am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
-| **Szenarien** (M5) | 🚧 Geplant | drei Automaten-Probleme als wiederholbare Evals mit einem echten lokalen Modell, geprüft wird die Reihenfolge der Kit-Aufrufe |
-| **Berichtsmodus** (M6) | 🆕 Unveröffentlicht | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
+| **Packaging** (M2) | 🆕 In 0.2.0 | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
+| **Terminal** (M3) | 🆕 In 0.2.0 | Antworten erscheinen, während sie entstehen, `[Runde/Max]` bei jedem Tool-Aufruf, `chat --continue` nimmt die Worte des letzten Gesprächs mit |
+| **Datenbank-Migrationen** | 🆕 In 0.2.0 | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
+| **MCP-Transport** (M4) | 🆕 In 0.2.0 · am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
+| **Szenarien** (M5) | 🆕 In 0.2.0 | drei Automaten-Probleme als wiederholbare Evals (`eval/`), gemessen an der Reihenfolge der Kit-Aufrufe |
+| **Berichtsmodus** (M6) | 🆕 In 0.2.0 | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
 
 ---
 

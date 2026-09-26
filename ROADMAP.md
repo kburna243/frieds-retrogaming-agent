@@ -2,17 +2,20 @@
 
 The harness version is ours; the kit's contract is theirs. Nothing here asks the kit to move at our speed.
 
-## Now (0.1)
+## Now (0.2)
 
-Working: kit client, live-catalog tools, the policy gate, SQLite memory, CLI, model gateways with the anonymize
-guard, the fake cabinet and 128 tests. Unreleased: memory read back into a new session (M1), packaging (M2), terminal UX with streaming and `chat --continue` (M3), the MCP transport (M4, verified on the cabinet), the report mode (M6) and schema migrations. See `docs/HANDOFF.md` for the state in more honest detail.
+Released as 0.2.0 once the tag is pushed: the kit client, live-catalog tools, the policy gate, SQLite memory with
+migrations, the CLI, model gateways with the anonymize guard, the fake cabinet, memory read back into a new session
+(M1), packaging (M2), terminal UX with streaming and `chat --continue` (M3), the MCP transport (M4, verified on the
+cabinet), the report mode (M6) and the scenarios (M5). 138 tests, no network, no Windows needed. `docs/HANDOFF.md`
+has the state in more honest detail.
 
 ## Next
 
 | # | Milestone | What "done" means |
 | --- | --- | --- |
-| M5 | **Scenarios** | A small eval folder: "gun does not work in game X", "pinball build to a second drive", "what changed since yesterday". Run against the fake cabinet with a real local model, asserting the *call order*, not the prose. |
-| 1.0 | **Release** | M5 has run against a real local model on the cabinet, the smoke test covers the new commands, the interactive chat has one input reader, and a tagged release with checksums exists. The checklist is "Until 1.0" in `docs/HANDOFF.md`. |
+| M5 | **Scenarios** | Done. Three cabinet problems in `eval/`, each a message, a fake-kit state and the expected *sequence* of kit calls, never the prose. The ideal scripts run in CI, a real local model with `FAGENT_EVAL_MODEL`. Measured with `llama3.2:3b` and `qwen2.5:3b`: the gate held in all six runs, neither model reached the ideal route. |
+| 1.0 | **Release** | What is left is a person's, all of it in "Until 1.0" of `docs/HANDOFF.md`: run the smoke test on the cabinet, one change with a typed yes over MCP, two evenings with the local model. Then `git tag v0.2.0`, and decide whether the next number is 1.0. |
 
 ## Later, if it earns it
 

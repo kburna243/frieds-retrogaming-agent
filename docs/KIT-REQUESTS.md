@@ -6,46 +6,59 @@ When an issue exists, put its link next to the heading; when the kit ships it, m
 
 ## Open
 
-### 1. `ApiVersion` should be `1.1` since v0.3.0 — [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21)
+### 4. A model changes before it measures — the kit could make reading cheaper
 
-**Seen in:** kit v0.3.0 (`7e7d546`, "release: v0.3.0"), compared with v0.2.0 (`c019818`, the harness's pinned
-snapshot).
+**Seen in:** M5 (`eval/`), run against two local models (`llama3.2:3b`, `qwen2.5:3b`) on the fake cabinet. Six runs,
+no gate rule broken, no run on the ideal route. Every one of them asked for a change before or without reading
+`status` and `components`, and every one of them named an operation the catalog does not contain —
+`step.lightgun.04-trigger_test`, `step.pinball.05-run` — in prose, to a person, as a next step.
 
-v0.3.0 adds the operation `backup.remove` to the catalog and to `API.md`. `API.md` says under *Versioning*:
-"`ApiVersion` changes its minor version when fields or operations are added". `api\RetroCabinetKit.Api.psm1` still
-sets `$script:ApiVersion = '1.0'`.
+The harness cannot fix that and should not pretend to: the gate stops the damage, and a scenario that measures
+"read first" belongs to the model and its prompt. What the kit *can* do is make the read cheap enough that a small
+model does it.
 
-Why it matters to a client: `ApiVersion` is the only thing a client can pin. With `1.0` on both sides, a client
-cannot tell a v0.2.0 kit (no `backup.remove`) from a v0.3.0 kit (with it) without reading the whole catalog, and a
-contract snapshot taken from either looks equally current.
+**Ask, in order of usefulness:**
 
-**Ask:** set `ApiVersion` to `1.1` in the next release and add a line to the CHANGELOG. No client breaks: a major
-of `1` is all the harness checks.
+- `status` could carry a one-line `Summary` in `Data` ("ViGEmBus missing; RetroBat detected at C:\RetroBat"). A model
+  that reads a sentence uses it; a model that reads eleven fields skims them.
+- the catalog's `Description` is the only thing a model reads about a step. Where a step needs a parameter that has
+  to come from an earlier step (detect before relocate), say so in the description: `needs step.pinball.01-detect
+  first`. A wrong name in prose is a confusing answer; a wrong order in a plan is a refused call.
+- `step.lightgun.09-verify` and `step.pinball.08-screens` are refused as interactive, which is right. A model that
+  gets `NotAvailable` invents a neighbouring step. If the refusal said what to tell the person ("run the wizard"),
+  the model would pass that on instead of improvising.
 
-### 2. Report the kit's own version through the API — [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22)
-
-The harness records `kitVersion: null` in every session, because API v1 does not report it and reading `VERSION`
-from the kit's folder would cross the boundary. The MCP server added in v0.3.0 already reads `VERSION` and sends it
-as `serverInfo.version`, so the value exists on the kit's side.
-
-Since M4 the harness records it when it runs over MCP (`--transport mcp`); over stdio, the reference transport, it
-is still `null`.
-
-**Ask:** add `KitVersion` (string, e.g. `0.3.0`) to the result of `operations` — in `Data` or as a top-level field
-next to `ApiVersion`. That is an additive change for a minor version (see request 1). The harness would then fill
-`kitVersion` from the catalog read it already makes, and the system prompt would name the version.
-
-### 3. MCP server: `apply` and `approved` can collide with a parameter name — [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23)
-
-`api\Start-KitMcpServer.ps1` reads the tool arguments `apply` and `approved` with PowerShell's `-eq`, which ignores
-case. A step or command parameter called `Apply` or `Approved` would be taken as the flag instead of being passed
-on. No operation of the 0.3.0 catalog has
-such a parameter today, so nothing is wrong yet.
-
-**Ask:** refuse such a parameter name when the catalog is built (or name the flags so they cannot collide, e.g.
-`_apply`), so the collision cannot appear silently with a new step. The harness refuses these names on its side
-anyway.
+None of this is required for anything to work. It is written because M5 measured it.
 
 ## Done
 
-Nothing yet.
+### 3. MCP server: `apply` and `approved` could collide with a parameter name — [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23) — shipped in 0.3.1
+
+`api\Start-KitMcpServer.ps1` read the tool arguments `apply` and `approved` with PowerShell's `-eq`, which ignores
+case, so a step parameter of that name would have been taken for the flag. **Ask was:** refuse such a parameter name
+when the catalog is built.
+
+Shipped: `API.md` now says `Apply` and `Approved` are refused as parameter names "in any spelling", and no operation
+of the 0.3.1 catalog carries one. The harness keeps its half regardless — `schemaForParameters`
+(`src/kit/tools.ts`) drops such a name whatever a catalog claims, and `test/contract.test.ts` pins both halves.
+
+### 2. Report the kit's own version through the API — [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22) — shipped in 0.3.1
+
+The harness used to record `kitVersion: null` over stdio, because API v1 did not report it and reading `VERSION` from
+the kit's folder would have crossed the boundary. Only the MCP server knew, from `serverInfo.version`.
+
+Shipped: `KitVersion` is a top-level field of every result since ApiVersion 1.1. The harness reads it from the
+document it already parses (`src/kit/client.ts` → `kitVersion`), so `fagent doctor` and the session row name the kit
+version over *both* transports, and the boundary is intact: the number arrives through the API. Verified with the
+fake cabinet behind a real PowerShell 5.1 wrapper — `transport mcp-stdio · kit 0.3.1` and `transport stdio · kit
+0.3.1` from the same machine.
+
+### 1. `ApiVersion` should be `1.1` since v0.3.0 — [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21) — shipped in 0.3.1
+
+v0.3.0 added `backup.remove` to the catalog and to `API.md` while `API.md`'s own versioning rule said a minor bump
+was due; `ApiVersion` stayed `1.0`, so a client could not tell a 0.2.0 kit from a 0.3.0 one without reading the whole
+catalog.
+
+Shipped: `0ab1116` (tag `v0.3.1`) reports `1.1`, `API.md` has a version table naming what each minor added, and
+`contract/` here is refreshed from it. Nothing broke on the way: the harness pins the *major*, so `1.1` was accepted
+before the snapshot moved; only the field list needed `KitVersion`, and a kit older than 1.1 leaves it empty.

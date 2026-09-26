@@ -3,9 +3,37 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); the version in `VERSION` and `package.json` is the
 harness version, independent of the kit's.
 
-## Unreleased
+## [0.2.0] - 2026-09-26
+
+The release the roadmap was for: M1 to M6, migrations, the second transport, and the scenarios that measure the
+whole thing. Built and checked against the fake cabinet on any OS; `tools/Start-SmokeTest.ps1` is what a person runs
+on the real one.
 
 ### Added
+
+- **Scenarios (M5)** (`eval/`): three cabinet problems — a lightgun that stopped working, a pinball build that should
+  live on a second drive, and "what changed since yesterday" — each one a user message, the state the fake cabinet
+  starts in, and the *sequence of kit calls* a good run produces. Never the wording.
+  `node --no-warnings eval/run.ts` runs the ideal scripts offline; `--model <name>` (or `FAGENT_EVAL_MODEL`) runs the
+  same three prompts against a real local model, where the route is the model's and only the gate rules are asserted.
+  Rules come in two kinds on purpose: a broken **gate** rule is a harness bug and decides the exit code
+  (`no-apply-without-dry-run`, `no-more-applies-than-yeses`, `never-interactive`, `no-apply-without-an-approval-needed`),
+  while a failed **behaviour** rule is a measurement and only a score (`measured-before-changing`,
+  `required-operations-reached`, `answer-mentions-the-point`, `only-real-operations-named`).
+  `test/scenarios.test.ts` also checks the checkers, on fabricated runs: a rule that cannot fire is worthless.
+  Measured, with `llama3.2:3b` and `qwen2.5:3b` against the fake cabinet, six runs: **not one gate rule broke** —
+  nothing was applied without a dry run, nothing without a yes, no interactive step was reached. Neither model
+  reached the ideal route either: both installed before they measured, and both named operations the catalog does not
+  contain (`step.lightgun.04-trigger_test`, `step.pinball.05-run`). That is what a 3B model does here, and the score
+  says so out loud instead of the build going red over it.
+- One reader on the terminal: `fagent chat` and the plan question share a `Prompter` instead of opening two readline
+  interfaces on one stdin (`src/policy/human.ts`).
+- `tools/Start-SmokeTest.ps1` covers the commands a cloud session cannot reach: `version --json` and `status --json`
+  parsed as documents, `report --since 1d`, `doctor --transport mcp`, and with `-Model` one chat turn plus a
+  `--continue`, both at level `read-only`. Every step names the exit code it wants and the script exits non-zero when
+  one surprises you.
+- `.github/workflows/release.yml`: a `v*` tag builds, packs, checksums (`SHA256SUMS.txt`), installs the tarball and
+  publishes it. It refuses when the tag and `package.json` disagree, so the version stays one decision made in one place.
 
 - **Memory is read back (M1)** (`src/agent/memory.ts`): a new `chat` session starts from a digest of up to five
   earlier sessions, appended to the system prompt. It is built locally from the database only: which reads ran, what
@@ -62,7 +90,12 @@ harness version, independent of the kit's.
   `fagent run` goes through `PolicyEngine.runOperation`, the same gate for a person, not limited to the tools.
 - A refused dry run (`DRY_RUN_NOT_SHOWNABLE`) carries the kit's `Warnings` and `Errors` to the model.
 - `README.md` / `README.de.md` follow the layout of the kit's README.
-- The contract snapshot is kit 0.3.0 (`b5df22f`), 34 operations.
+- **The kit speaks ApiVersion 1.1 (kit 0.3.1), and the harness follows.** `KitVersion` is a field in every result now,
+  which is how the harness learns the kit's own version without reading a single kit file: over plain stdio it was
+  invisible before, and `fagent doctor` shows it for both transports. `Apply` and `Approved` are refused as parameter
+  names in any spelling, and `schemaForParameters` never offers them whatever a catalog claims — a model must not be
+  able to spell permission. A kit older than 1.1 leaves the field empty instead of breaking the shape.
+- The contract snapshot is kit 0.3.1 (`0ab1116`), 34 operations, ApiVersion 1.1.
 
 ### Fixed
 

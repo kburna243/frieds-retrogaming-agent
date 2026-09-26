@@ -8,7 +8,7 @@ without the cabinet.
 | Thing | Status |
 | --- | --- |
 | Kit client over stdio (`api\Invoke-KitApi.ps1`, one process, one JSON document) | works, verified on the cabinet |
-| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and on the cabinet (`doctor`, `status`, a declined change; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
+| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and on the cabinet (`doctor`, `status`, a declined change; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1` |
 | Live catalog → tool definitions (9 fixed + `run_step`) | works: 34 operations, 10 tools at `operator`, 5 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test; `fagent run` uses the same gate through `PolicyEngine.runOperation` |
 | Interactive steps never callable | works, refused before any process starts |
@@ -18,36 +18,45 @@ without the cabinet.
 | CLI `fagent`: `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version` | works; `--json` on every command, exit 0/1/2/3, no `--yes` anywhere |
 | Terminal (M3): streaming, `[round/max]`, `--max-rounds`, `chat --continue` / `--session` | works in tests; a continued conversation carries words and never approvals. **Not yet used on the cabinet** |
 | Report mode (M6): `fagent report [--since 7d] [--json]` | works; reads the database only, needs no kit root, suggests nothing |
-| Packaging (M2): `npm i -g .`, `fagent --version` | works; CI installs it globally on Linux and Windows |
-| Fake cabinet (`test/kit/`) — the API contract as a second implementation, with an MCP server | works; every operation it offers has the kind, availability and parameters of the pinned snapshot (tested) |
-| Tests | **128 passed**, 12 files, no network, no Windows, ~2 s |
+| Scenarios (M5): `eval/` — three cabinet problems, judged on the order of kit calls | works. Offline the ideal scripts must reproduce the documented trace exactly; with `--model`/`FAGENT_EVAL_MODEL` a real local model gets the same prompts on the fake cabinet and is judged on the gate rules only. Measured with `llama3.2:3b` and `qwen2.5:3b`: no gate rule broke in any run, neither model reached the ideal route |
+| One reader on the terminal: chat input and the plan question | works; the chat owns a `Prompter` and hands it to `TerminalHumanGateway`, so no second `readline` opens on one stdin |
+| Packaging (M2): `npm i -g .`, `fagent --version` | works; CI installs it globally on Linux and Windows; a `v*` tag publishes a tarball with `SHA256SUMS.txt` |
+| Fake cabinet (`test/kit/`) — the API contract as a second implementation, with an MCP server | works; every operation it offers has the kind, availability and parameters of the pinned snapshot (tested); its two version sources are one constant |
+| Tests | **138 passed**, 3 skipped (the real-model scenarios), 13 files, no network, no Windows, ~4 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
-| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 83 files |
-| Pinned contract (`contract/`) | kit 0.3.0, commit `b5df22f4…`, ApiVersion 1.0, 34 operations; made by the updater that asks the kit |
+| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 86 files |
+| Pinned contract (`contract/`) | kit 0.3.1, commit `0ab1116d…`, ApiVersion 1.1, 34 operations; made by the updater that asks the kit |
 | Website (`website/`) | published to GitHub Pages by `.github/workflows/deploy-pages.yml` |
 
 ## Until 1.0: what is left
 
-Everything on the roadmap except M5 is built. What stands between `main` and a 1.0 is below, sorted by who can do
-it. A box is ticked when the thing is done *and* recorded here or in the CHANGELOG.
+Every milestone on the roadmap is built: M1 to M6, the migrations, and the scenarios. What stands between `main` and
+a 1.0 is below, sorted by who can do it. A box is ticked when the thing was measured, not when it was written.
 
 ### A cloud session can do these
 
-- [ ] **M5: scenarios.** Three cabinet problems as repeatable evals — "my gun does not work in game X", "move the
+- [x] **M5: scenarios.** Three cabinet problems as repeatable evals — "my gun does not work in game X", "move the
   pinball build to a second drive", "what changed since yesterday". Each is a user message, a fake-kit state and the
   expected *sequence* of kit calls (`callTrace()`), never the prose. They run against the fake cabinet with a real
-  local model when `FAGENT_EVAL_MODEL` is set and are skipped otherwise, so `npm run check` stays offline. The prompt
-  for this is further down.
-- [ ] **Interactive chat and the plan question share one input.** In `fagent chat` without `--message`, the chat
-  reads stdin with one `readline` and `TerminalHumanGateway` opens a second one for "Apply this exact change?". It
-  works in the tests (they never reach the terminal path) but has not been tried by a person. Pass the chat's
-  interface to the human gateway so there is exactly one reader, and cover it with a test that feeds stdin.
-- [ ] **Smoke test for the new commands.** `tools/Start-SmokeTest.ps1` knows six steps from 0.1.0. Add `doctor
-  --transport mcp`, `status --json` (parse it), `report --since 1d`, `version`, and `history --json`, so one run on
-  the cabinet checks everything that cannot run in CI.
-- [ ] **Release 1.0 (preparation).** Bump `VERSION` and `package.json` together (the rule checker insists), turn
-  *Unreleased* in the CHANGELOG into the version, and add a release workflow like the kit's (tag → build → a tarball
-  from `npm pack` with `SHA256SUMS.txt`). Pushing the tag stays with a person.
+  local model when `FAGENT_EVAL_MODEL` is set and are skipped otherwise, so `npm run check` stays offline.
+  In `eval/scenarios.ts` (the three and the rules) and `eval/run.ts` (the runner, `--model`, `--only`). One addition
+  to the brief: the rules are split. **Gate** rules are the harness's own promise and a violation decides the exit
+  code — no apply without a dry run of that operation, no more applies than human yeses, never an interactive step,
+  no `-Approved` without `-Apply`. **Behaviour** rules describe a good run and are a score — measured before
+  changing, reached the operations the problem is about, named only operations the catalog has. A 3B model that
+  changes before it measures is a measurement; a build that lets a model apply without a dry run is a bug.
+- [x] **Interactive chat and the plan question share one input.** The chat owns one `Prompter` (`src/policy/human.ts`)
+  and hands it to `TerminalHumanGateway`, so no second `readline` ever opens on the same stdin. `fagent run` still
+  makes a short-lived one, because there nothing else is reading.
+- [x] **Smoke test for the new commands.** Ten steps, plus two chat steps when `-Model` is given: `doctor
+  --transport mcp`, `version --json` and `status --json` parsed as documents, `report --since 1d`, `history`. Each
+  step says which exit code it wants, and the script exits non-zero when one surprises you — before, a refusal that
+  was the point of a step looked exactly like a failure of it. `-Database <scratch>` keeps the run out of your
+  audit trail (it is not `-Db`: PowerShell already aliases `-db` to the common `-Debug` parameter).
+- [x] **Release preparation.** `VERSION` and `package.json` say 0.2.0, the CHANGELOG has that section, and
+  `.github/workflows/release.yml` builds, packs, writes `SHA256SUMS.txt`, installs the tarball and publishes on a
+  `v*` tag — refusing a tag that disagrees with `package.json`. Verified here by packing and installing: the
+  installed `fagent --version` and `fagent report --json` came out of the tarball, not the checkout.
 
 ### Only a person at the cabinet can do these
 
@@ -56,17 +65,25 @@ it. A box is ticked when the thing is done *and* recorded here or in the CHANGEL
   tried.
 - [ ] **Two evenings with the local model:** `fagent chat --model llama3.2:3b` on the first, `fagent chat --continue`
   on the second. The second should know what the first did, and a change must still ask again.
-- [ ] **Run M5 against the real model** once it exists: `FAGENT_EVAL_MODEL=llama3.2:3b npm test`, and write down
-  which scenarios the model gets right. That is the honest measure of "does it help".
-- [ ] **The smoke test**, once extended:
+- [ ] **Run M5 against the cabinet's model.** `FAGENT_EVAL_MODEL=<model> node --no-warnings eval/run.ts` on the
+  cabinet, or `FAGENT_EVAL_MODEL=<model> npm test`. It ran here against `llama3.2:3b` and `qwen2.5:3b` and the
+  honest result is in the CHANGELOG: no gate rule broke in any of the six runs, neither model reached the ideal
+  route. That is a statement about 3B models, not about the cabinet's, and "does it help" is still yours to judge.
+- [ ] **The smoke test**, now ten steps and a verdict per step:
   `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
+  It ran end to end here against a PowerShell stand-in for the kit (12 of 12 steps as expected, the MCP transport
+  included), which proves the wiring of the script and nothing about the real cabinet. Step 10 needs a kit of 0.3.0
+  or newer; older kits say so and skip it.
+- [ ] **Push the tag** when the run above is boring in the right way: `git tag v0.2.0 && git push origin v0.2.0`.
+  The release workflow does the rest; nothing is published without that push.
 - [ ] **After every kit release:** `tools\Test-ContractDrift.ps1`, and `tools\Update-ContractSnapshot.ps1` when it
   drifted. Then a cloud session brings the fake cabinet along.
 
 ### Decisions only a person can make
 
-- [ ] **The version number.** 1.0.0 says "the gate and the contract are stable"; 0.2.0 says "more to come". Both are
-  honest; 1.0 is justified once M5 ran against a real model.
+- [x] **The version number: 0.2.0.** M5 ran against real local models and the gate held in every run, so 1.0 was
+  arguable. It is 0.2.0 because the extended smoke test has not been run on the cabinet yet, and that run is the
+  difference between "tested against a fake" and "works on the machine". Pushing the tag stays a person's act.
 - [ ] **Publish to npm or not.** Today the install is `npm i -g .` from a checkout. Publishing needs a package name
   and an npm account; it is not required for 1.0.
 - [ ] **The first real conversation.** Which problem should the harness solve first on the cabinet? Everything above
@@ -74,16 +91,19 @@ it. A box is ticked when the thing is done *and* recorded here or in the CHANGEL
 
 ### Waiting on the kit
 
-Filed as issues on the kit; nothing to do here until the kit ships them ([KIT-REQUESTS.md](KIT-REQUESTS.md)):
+Nothing. Kit 0.3.1 shipped all three requests and this repository absorbed them
+([KIT-REQUESTS.md](KIT-REQUESTS.md) has the entries under *Done*):
 
-- [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21) `ApiVersion` should be 1.1 since v0.3.0.
-- [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22) the kit's version through the API — then
-  `kitVersion` is filled over stdio too (over MCP it already is).
-- [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23) `apply`/`approved` can collide with a parameter
-  name in the MCP server (the harness refuses such names already).
+- [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21) `ApiVersion` is `1.1`.
+- [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22) `KitVersion` is a field in every result, so
+  `fagent doctor` names the kit over plain stdio too and the harness never reads a kit file to learn it.
+- [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23) `Apply` / `Approved` are refused as parameter
+  names in any spelling; `schemaForParameters` in this repository refuses to offer them whatever a catalog claims.
 
-When one ships: refresh `contract/`, move the entry in KIT-REQUESTS.md to *Done*, and for #22 read `KitVersion` from
-the catalog in `src/harness.ts`.
+The next one to file, from M5: a small local model changes before it measures. The system prompt says to read first
+and the model does not always listen. A harness can refuse that — show a plan only after a read happened in this
+session — but that is a rule about the product and not a bug, so it is a decision and not a task. It is written in
+`eval/scenarios.ts` as a behaviour rule so the day something changes about it, the score says so.
 
 ## Decisions worth knowing before you change something
 
@@ -143,7 +163,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 128 tests + repo rules — this is the bar
+npm run check        # typecheck + 138 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -162,8 +182,8 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 128 tests
-run against it on Linux.
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 138 tests
+run against it on any OS.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
 contract/API.md. Those files are the specification; the code follows them, not the other way round.
@@ -179,20 +199,20 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 128 passing tests. If anything fails, fix that
-before you start.
+Run `npm install && npm run check` first and make sure you see 138 passing and 3 skipped. If anything fails, fix
+that before you start.
 
-Then do milestone M5 from ROADMAP.md: scenarios. An eval folder with three cases — "my gun does not work in game
-X", "move the pinball build to a second drive", "what changed since yesterday" — each a user message, a fake-kit
-state and the expected *sequence* of kit calls (callTrace()), never the prose. They run against the fake cabinet
-with a real local model when FAGENT_EVAL_MODEL is set, and are skipped otherwise, so `npm run check` stays offline.
-A scenario passes when the call order matches and nothing was applied without the scripted person's yes.
+Then pick one item from "Until 1.0" in docs/HANDOFF.md. The ones a cloud session can still do are the open ones
+under that heading; the honest description of each is in the file, not here. If you touch a scenario, remember the
+split: a broken gate rule is a harness bug and must fail the run, a missed behaviour rule is a measurement and must
+only be reported.
 
-Finish by ticking the box in docs/HANDOFF.md ("Until 1.0"), updating the state table and CHANGELOG.md, then
-`npm run check` again. Report which commands you ran and what they printed. Do not push.
+Finish by ticking the box, updating the state table and CHANGELOG.md in the same commit, then `npm run check`
+again. Report which commands you ran and what they printed, and do not push.
 ```
 
-For the other cloud items in "Until 1.0", replace the M5 paragraph with the item's text; the rest of the block stays.
+For a milestone that is not yet written as an item, the paragraph before "Finish by" is the one to replace; the rest
+of the block is the standing brief and stays.
 
 ## Who owns what
 

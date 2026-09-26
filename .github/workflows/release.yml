@@ -1,0 +1,79 @@
+name: Release
+
+# Triggered by a version tag:  git tag v0.2.0 && git push origin v0.2.0
+# Nothing here decides the version. A person pushes the tag, this workflow only checks that the tag and
+# package.json agree, then builds and publishes what the tag says.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build, pack, checksum
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - name: the tag must be the version in package.json
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          want="v$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$want" ]; then
+            echo "tag $tag does not match $want - bump package.json and VERSION together, or retag"
+            exit 1
+          fi
+
+      - run: npm ci
+      - name: check before shipping
+        run: npm run check
+
+      - name: build the tarball from the pack rule, not from the working tree
+        run: npm pack
+
+      - name: checksums, so a person can verify what they downloaded
+        run: |
+          tarball="$(ls -1 *.tgz | head -n 1)"
+          sha256sum "$tarball" > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: the tarball installs and the command inside it runs
+        run: |
+          tarball="$(ls -1 *.tgz | head -n 1)"
+          npm i -g "./$tarball" --prefix "$RUNNER_TEMP/global"
+          "$RUNNER_TEMP/global/bin/fagent" --version
+          "$RUNNER_TEMP/global/bin/fagent" help | head -n 3
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref_name }}
+          path: |
+            *.tgz
+            SHA256SUMS.txt
+
+  github-release:
+    name: publish the release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ github.ref_name }}
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            *.tgz
+            SHA256SUMS.txt
+          body: |
+            Install: `npm i -g <tarball>` then `fagent doctor --kit <path to the kit checkout>`.
+            Verify: `sha256sum -c SHA256SUMS.txt`.
+            Requires Node 24 or newer (the harness uses `node:sqlite` and runs TypeScript directly).
+            The cabinet itself needs Windows PowerShell 5.1, so `fagent` runs where the kit runs.
+            See `docs/HANDOFF.md` for what this version does and `CHANGELOG.md` for what changed.
