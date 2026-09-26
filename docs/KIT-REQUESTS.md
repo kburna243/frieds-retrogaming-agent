@@ -8,10 +8,12 @@ When an issue exists, put its link next to the heading; when the kit ships it, m
 
 ### 4. A model changes before it measures — the kit could make reading cheaper
 
-**Seen in:** M5 (`eval/`), run against two local models (`llama3.2:3b`, `qwen2.5:3b`) on the fake cabinet. Six runs,
-no gate rule broken, no run on the ideal route. Every one of them asked for a change before or without reading
-`status` and `components`, and every one of them named an operation the catalog does not contain —
-`step.lightgun.04-trigger_test`, `step.pinball.05-run` — in prose, to a person, as a next step.
+**Seen in:** M5 (`eval/`), run against two local models (`llama3.2:3b`, `qwen2.5:3b`) on the fake cabinet: six runs,
+no gate rule broken, no run on the ideal route. Three of the six changed something before reading anything —
+ViGEmBus installed without one look at `status` or `components`, the pinball build relocated without
+`step.pinball.01-detect`. Asked "what changed since yesterday", one model answered from `status` alone and the other
+produced a support bundle. Every run began with the same call, `operations`: the catalog is the first thing a model
+sees, and a 3B model reads it as the cabinet.
 
 The harness cannot fix that and should not pretend to: the gate stops the damage, and a scenario that measures
 "read first" belongs to the model and its prompt. What the kit *can* do is make the read cheap enough that a small

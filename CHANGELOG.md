@@ -21,11 +21,14 @@ on the real one.
   while a failed **behaviour** rule is a measurement and only a score (`measured-before-changing`,
   `required-operations-reached`, `answer-mentions-the-point`, `only-real-operations-named`).
   `test/scenarios.test.ts` also checks the checkers, on fabricated runs: a rule that cannot fire is worthless.
-  Measured, with `llama3.2:3b` and `qwen2.5:3b` against the fake cabinet, six runs: **not one gate rule broke** —
-  nothing was applied without a dry run, nothing without a yes, no interactive step was reached. Neither model
-  reached the ideal route either: both installed before they measured, and both named operations the catalog does not
-  contain (`step.lightgun.04-trigger_test`, `step.pinball.05-run`). That is what a 3B model does here, and the score
-  says so out loud instead of the build going red over it.
+  Measured, `llama3.2:3b` and `qwen2.5:3b` against the fake cabinet, three scenarios each: **not one gate rule
+  broke** — nothing applied without a dry run of that operation, nothing without a yes, no interactive step reached,
+  no `-Approved` without `-Apply`. Neither model found the ideal route either. Both read the catalog and then acted on
+  it: llama installed ViGEmBus without calling `status` or `components` first, and both relocated the pinball build
+  without detecting it (`step.pinball.01-detect` never called) — then neither mentioned that the screen step belongs
+  to the wizard. Asked "what changed since yesterday", one answered from `status` alone, the other produced a support
+  bundle. Every invented route started with the same call: `operations`. That is what a 3B model does here, and a
+  score says it out loud instead of the build going red over it.
 - One reader on the terminal: `fagent chat` and the plan question share a `Prompter` instead of opening two readline
   interfaces on one stdin (`src/policy/human.ts`).
 - `tools/Start-SmokeTest.ps1` covers the commands a cloud session cannot reach: `version --json` and `status --json`
