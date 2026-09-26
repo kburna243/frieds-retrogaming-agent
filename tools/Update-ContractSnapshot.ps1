@@ -1,9 +1,9 @@
 #Requires -Version 5.1
 # Refreshes the pinned contract snapshot in contract/ from a kit checkout.
-# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\Update-ContractSnapshot.ps1 [-KitRoot <path>]
+# Usage: powershell -NoProfile -ExecutionPolicy Bypass -File tools\Update-ContractSnapshot.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit
 [CmdletBinding()]
 param(
-    [string] $KitRoot = 'I:\claude-system\data\projects\retro-cabinet-kit',
+    [Parameter(Mandatory)] [string] $KitRoot,
     [string] $Branch = 'origin/main'
 )
 $ErrorActionPreference = 'Stop'
@@ -43,86 +43,26 @@ try {
     New-Item -ItemType Directory -Force -Path (Join-Path $repo 'contract') | Out-Null
     [IO.File]::WriteAllText((Join-Path $repo 'contract/API.md'), $header + $apiBlob + "`n", (New-Object System.Text.UTF8Encoding($false)))
 
-    # Catalog snapshot: the fixed operations are documented in API.md; the step operations come from the
-    # step scripts of the same commit, read the same way the API reads them (synopsis + plain parameters).
-    $interactive = @('step.pinball.08-screens', 'step.lightgun.09-verify')
-    $denied = @('StatePath','Culture','KitUserSid','TrustedOwner','TaskPrefix','AutomationDir','LayersKey',
-        'RegistryRoots','AppCompatRoots','AnswerFile','WhatIf','Confirm')
-    $common = [System.Management.Automation.PSCmdlet]::CommonParameters +
-              [System.Management.Automation.PSCmdlet]::OptionalCommonParameters
-
-    function Get-StepParams([string] $Path) {
-        $t = $null; $e = $null
-        $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref] $t, [ref] $e)
-        if (-not $ast.ParamBlock) { return @() }
-        $found = @()
-        foreach ($p in $ast.ParamBlock.Parameters) {
-            $text = $p.Extent.Text
-            $name = $p.Name.VariablePath.UserPath
-            if ($common -contains $name -or $denied -contains $name) { continue }
-            $type = $null
-            if ($text -match '(?i)\[\s*string\[\]\s*\]') { $type = 'String[]' }
-            elseif ($text -match '(?i)\[\s*string\s*\]') { $type = 'String' }
-            elseif ($text -match '(?i)\[\s*int\s*\]') { $type = 'Int32' }
-            elseif ($text -match '(?i)\[\s*long\s*\]') { $type = 'Int64' }
-            elseif ($text -match '(?i)\[\s*bool(lean)?\s*\]') { $type = 'Boolean' }
-            elseif ($text -match '(?i)\[\s*switch\s*\]') { $type = 'switch' }
-            if (-not $type) { continue }
-            $mandatory = [bool]($text -match '\bMandatory\b(?!\s*=\s*`$false)')
-            $found += [pscustomobject]@{ Name = $name; Type = $type; Mandatory = $mandatory }
-        }
-        $found
+    # Catalog snapshot: asked from the kit itself, at exactly the pinned commit. A detached worktree of $commit is
+    # created next to the checkout, its own api\Invoke-KitApi.ps1 answers "operations", and the worktree is removed
+    # again. Nothing is re-implemented here (an earlier version listed the fixed operations by hand and missed
+    # backup.remove and the profile.* parameters of kit 0.3.0), and an uncommitted checkout cannot leak in.
+    $worktree = Join-Path $tmp 'kit'
+    git -C $KitRoot worktree add --detach --quiet $worktree $commit
+    if ($LASTEXITCODE -ne 0) { throw "git worktree add failed ($LASTEXITCODE)" }
+    try {
+        $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+        $live = & $powerShell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $worktree 'api\Invoke-KitApi.ps1') -Operation operations
+        if ($LASTEXITCODE -ne 0) { throw "the kit at $commit refused the catalog call (exit $LASTEXITCODE)" }
+    } finally {
+        git -C $KitRoot worktree remove --force $worktree
     }
-    function Get-StepSynopsis([string] $Path) {
-        $t = $null; $e = $null
-        $ast = [System.Management.Automation.Language.Parser]::ParseFile($Path, [ref] $t, [ref] $e)
-        $h = $ast.GetHelpContent()
-        if ($h -and $h.Synopsis) { ($h.Synopsis -split "`n")[0].Trim() } else { '' }
-    }
-
-    $fixed = @(
-        [pscustomobject]@{ Name='operations'; Kind='Read'; Suite=''; Interactive=$false; Available=$true; Description='This catalog.'; Parameters=@() }
-        [pscustomobject]@{ Name='status'; Kind='Read'; Suite=''; Interactive=$false; Available=$true; Description='Health check of system, pinball, lightgun and security (doctor).'; Parameters=@() }
-        [pscustomobject]@{ Name='components'; Kind='Read'; Suite=''; Interactive=$false; Available=$true; Description='Detected components: Windows, RetroBat, Gunmote, ViGEmBus, DolphinBar, Steam, pinball build.'; Parameters=@() }
-        [pscustomobject]@{ Name='backups.list'; Kind='Read'; Suite=''; Interactive=$false; Available=$true; Description="The kit's backups, newest first."; Parameters=@([pscustomobject]@{Name='Root';Type='String[]';Mandatory=$false}) }
-        [pscustomobject]@{ Name='backup.check'; Kind='Read'; Suite=''; Interactive=$false; Available=$true; Description='Checks a backup against its checksums (zip) or its original (file copy).'; Parameters=@([pscustomobject]@{Name='Path';Type='String';Mandatory=$true}) }
-        [pscustomobject]@{ Name='backup.restore'; Kind='Change'; Suite=''; Interactive=$false; Available=$true; Description='Restores a backup; the current file is saved first. Zip backups need AllowedRoot.'; Parameters=@([pscustomobject]@{Name='Path';Type='String';Mandatory=$true},[pscustomobject]@{Name='AllowedRoot';Type='String[]';Mandatory=$false}) }
-        [pscustomobject]@{ Name='backup.export'; Kind='Change'; Suite=''; Interactive=$false; Available=$true; Description='Copies a backup to a folder and records its SHA-256.'; Parameters=@([pscustomobject]@{Name='Path';Type='String';Mandatory=$true},[pscustomobject]@{Name='Destination';Type='String';Mandatory=$true}) }
-        [pscustomobject]@{ Name='support.bundle'; Kind='Change'; Suite=''; Interactive=$false; Available=$true; Description='Writes an anonymized support bundle (doctor, environment, step states, logs).'; Parameters=@([pscustomobject]@{Name='Destination';Type='String';Mandatory=$false}) }
-    )
-    $operations = @($fixed)
-    foreach ($suite in 'pinball','lightgun') {
-        foreach ($b in (git -C $KitRoot ls-tree --name-only "${Branch}:$suite/steps" | Sort-Object)) {
-            $name = 'step.{0}.{1}' -f $suite, [IO.Path]::GetFileNameWithoutExtension($b).ToLowerInvariant()
-            $dest = Join-Path $tmp ($suite + '-' + $b)
-            (git -C $KitRoot cat-file blob "${Branch}:$suite/steps/$b") -join "`n" | Set-Content -Encoding utf8 $dest
-            $isInteractive = $interactive -contains $name
-            $operations += [pscustomobject]@{
-                Name = $name; Kind = 'Change'; Suite = $suite; Interactive = $isInteractive; Available = (-not $isInteractive)
-                Description = Get-StepSynopsis $dest; Parameters = @(Get-StepParams $dest)
-            }
-        }
-    }
-    foreach ($p in @('profile.export','profile.import')) {
-        $operations += [pscustomobject]@{ Name=$p; Kind='Change'; Suite=''; Interactive=$false; Available=$false
-            Description="Cabinet migration: not available yet ($($p -replace '\.','') arrives with v0.3)."; Parameters=@() }
-    }
-
-    $doc = [pscustomobject]@{
-        ApiVersion = $apiVersion
-        Source = [pscustomobject]@{ repository='frieds-retrogaming-kit'; branch=$Branch; commit=$commit; kitVersion=$version; fetched=(Get-Date -Format 'yyyy-MM-dd') }
-        Note = 'Snapshot of the shape of Get-KitOperation. For offline development and tests only: at run time the harness always reads the live catalog from the kit.'
-        Operations = $operations
-    }
-    # Formatting and the metadata block are done by node: deterministic indent, LF, no BOM, reviewable diffs.
     $raw = Join-Path $tmp 'operations.json'
-    [IO.File]::WriteAllText($raw, (ConvertTo-Json -InputObject $operations -Depth 8), (New-Object System.Text.UTF8Encoding($false)))
-    $steps = @($operations | Where-Object { $_.Name -like 'step.*' })
+    [IO.File]::WriteAllText($raw, ($live -join "`n"), (New-Object System.Text.UTF8Encoding($false)))
     & node (Join-Path $PSScriptRoot 'write-catalog-snapshot.mjs') $raw (Join-Path $repo 'contract/catalog-v1.json') $apiVersion $commit $version $Branch (Get-Date -Format 'yyyy-MM-dd')
     if ($LASTEXITCODE -ne 0) { throw "write-catalog-snapshot.mjs failed ($LASTEXITCODE)" }
     "API.md   sha256 $sha"
     "commit   $commit"
-    "{0} operations, {1} steps -> contract/API.md, contract/catalog-v1.json" -f $operations.Count, $steps.Count
 } finally {
     [Console]::OutputEncoding = $savedEncoding
     Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue

@@ -10,11 +10,20 @@ if (!raw || !out) {
   process.exit(2);
 }
 
-const operations = JSON.parse(readFileSync(raw, 'utf8'));
-const list = Array.isArray(operations) ? operations : [operations];
+// Either the kit's own answer to `operations` (an OperationResult) or a bare array of operations.
+const parsed = JSON.parse(readFileSync(raw, 'utf8').replace(/^\uFEFF/, ''));
+if (!Array.isArray(parsed) && parsed.Success === false) {
+  console.error(`the kit's catalog call did not succeed: ${parsed.Message}`);
+  process.exit(1);
+}
+const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.Data?.Operations) ? parsed.Data.Operations : [parsed];
+if (!Array.isArray(parsed) && parsed.ApiVersion && apiVersion && parsed.ApiVersion !== apiVersion) {
+  console.error(`note: API.md documents ApiVersion ${apiVersion}, the kit answered ${parsed.ApiVersion}; the kit's answer is pinned`);
+}
+const pinnedApiVersion = (!Array.isArray(parsed) && parsed.ApiVersion) || apiVersion || '1.0';
 
 const document = {
-  ApiVersion: apiVersion ?? '1.0',
+  ApiVersion: pinnedApiVersion,
   Source: {
     repository: 'frieds-retrogaming-kit',
     url: 'https://github.com/kburna243/frieds-retrogaming-kit',

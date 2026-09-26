@@ -20,9 +20,10 @@ On Windows, next to a kit checkout:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools\Update-ContractSnapshot.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit
 ```
 
-It reads the blobs from git (`git show origin/main:API.md`, the step `.PARAMETER` blocks through the PowerShell AST),
-never from a working tree, so an uncommitted kit checkout cannot silently enter the contract. It rewrites both files
-and the provenance block.
+It reads `API.md` from git (`git show origin/main:API.md`) and asks the kit for its catalog at the same commit: a
+temporary git worktree of that commit runs its own `api\Invoke-KitApi.ps1 -Operation operations` and is removed
+again. Nothing comes from a working tree, so an uncommitted kit checkout cannot silently enter the contract, and
+nothing is re-implemented here. It rewrites both files and the provenance block.
 
 Then check the drift, which compares the snapshot against what a live kit answers today:
 

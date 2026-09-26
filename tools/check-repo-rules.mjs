@@ -70,6 +70,19 @@ for (const file of textFiles) {
   }
 }
 
+// Absolute Windows paths: the root folder must be one of the synthetic ones. A real machine's layout (a data drive,
+// a project folder) is personal too, even without a user name in it.
+const SYNTHETIC_ROOTS = ['c:\\retrobat', 'd:\\cabinet', 'd:\\pinball', 'd:\\kit', 'c:\\synthetic', 'c:\\fake-kit', 'c:\\windows', 'c:\\users', 'e:\\old build'];
+const drivePath = /(?<![A-Za-z0-9])[A-Za-z]:\\{1,2}[A-Za-z0-9._ -]+/g;
+for (const file of textFiles) {
+  if (ALLOWLIST.has(file)) continue;
+  for (const match of readText(file).matchAll(drivePath)) {
+    const root = match[0].replace(/\\\\/g, '\\').toLowerCase().trimEnd();
+    if (SYNTHETIC_ROOTS.some((allowed) => root === allowed || root.startsWith(`${allowed}`))) continue;
+    failures.push(`1 depersonalization: ${file} contains the path "${match[0]}" — use a synthetic root (${SYNTHETIC_ROOTS.slice(0, 3).join(', ')}, …)`);
+  }
+}
+
 // ---- 2. pinned contract ---------------------------------------------------------------------------------
 
 const contractPath = 'contract/API.md';
