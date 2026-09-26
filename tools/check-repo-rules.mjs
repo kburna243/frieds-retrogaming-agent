@@ -71,8 +71,9 @@ for (const file of textFiles) {
 }
 
 // Absolute Windows paths: the root folder must be one of the synthetic ones. A real machine's layout (a data drive,
-// a project folder) is personal too, even without a user name in it.
-const SYNTHETIC_ROOTS = ['c:\\retrobat', 'd:\\cabinet', 'd:\\pinball', 'd:\\kit', 'c:\\synthetic', 'c:\\fake-kit', 'c:\\windows', 'c:\\users', 'e:\\old build'];
+// a project folder) is personal too, even without a user name in it. `e:\pinball` is the second drive the
+// relocation scenario moves the build to — the same invented folder on another invented letter, not a real disk.
+const SYNTHETIC_ROOTS = ['c:\\retrobat', 'd:\\cabinet', 'd:\\pinball', 'd:\\kit', 'c:\\synthetic', 'c:\\fake-kit', 'c:\\windows', 'c:\\users', 'e:\\old build', 'e:\\pinball'];
 const drivePath = /(?<![A-Za-z0-9])[A-Za-z]:\\{1,2}[A-Za-z0-9._ -]+/g;
 for (const file of textFiles) {
   if (ALLOWLIST.has(file)) continue;
