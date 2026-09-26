@@ -6,7 +6,7 @@ When an issue exists, put its link next to the heading; when the kit ships it, m
 
 ## Open
 
-### 1. `ApiVersion` should be `1.1` since v0.3.0
+### 1. `ApiVersion` should be `1.1` since v0.3.0 — [#21](https://github.com/kburna243/frieds-retrogaming-kit/issues/21)
 
 **Seen in:** kit v0.3.0 (`7e7d546`, "release: v0.3.0"), compared with v0.2.0 (`c019818`, the harness's pinned
 snapshot).
@@ -22,7 +22,7 @@ contract snapshot taken from either looks equally current.
 **Ask:** set `ApiVersion` to `1.1` in the next release and add a line to the CHANGELOG. No client breaks: a major
 of `1` is all the harness checks.
 
-### 2. Report the kit's own version through the API
+### 2. Report the kit's own version through the API — [#22](https://github.com/kburna243/frieds-retrogaming-kit/issues/22)
 
 The harness records `kitVersion: null` in every session, because API v1 does not report it and reading `VERSION`
 from the kit's folder would cross the boundary. The MCP server added in v0.3.0 already reads `VERSION` and sends it
@@ -35,7 +35,7 @@ is still `null`.
 next to `ApiVersion`. That is an additive change for a minor version (see request 1). The harness would then fill
 `kitVersion` from the catalog read it already makes, and the system prompt would name the version.
 
-### 3. MCP server: `apply` and `approved` can collide with a parameter name
+### 3. MCP server: `apply` and `approved` can collide with a parameter name — [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23)
 
 `api\Start-KitMcpServer.ps1` reads the tool arguments `apply` and `approved` with PowerShell's `-eq`, which ignores
 case. A step or command parameter called `Apply` or `Approved` would be taken as the flag instead of being passed

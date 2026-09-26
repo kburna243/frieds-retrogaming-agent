@@ -4,7 +4,7 @@
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
     "branch": "origin/main",
-    "commit": "e2885085a2fc843c2814da46a60fe7d01899b974",
+    "commit": "b5df22f4a5321238e979e26cda5b6ce8f8c84920",
     "kitVersion": "0.3.0",
     "fetched": "2026-09-26"
   },
@@ -40,6 +40,21 @@
         },
         {
           "Name": "Destination",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "backup.remove",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Deletes one backup of the kit (nothing else can be deleted).",
+      "Parameters": [
+        {
+          "Name": "Path",
           "Type": "String",
           "Mandatory": true
         }
@@ -103,18 +118,95 @@
       "Kind": "Change",
       "Suite": "",
       "Interactive": false,
-      "Available": false,
-      "Description": "Cabinet migration: not available yet (profileexport arrives with v0.3).",
-      "Parameters": []
+      "Available": true,
+      "Description": "Cabinet migration (Export-KitCabinetProfile).",
+      "Parameters": [
+        {
+          "Name": "Suite",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Destination",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "PupDatabasePath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "GunmoteDir",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "SteamDir",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "UserName",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "ComputerName",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "UserProfile",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "profile.import",
       "Kind": "Change",
       "Suite": "",
       "Interactive": false,
-      "Available": false,
-      "Description": "Cabinet migration: not available yet (profileimport arrives with v0.3).",
-      "Parameters": []
+      "Available": true,
+      "Description": "Cabinet migration (Import-KitCabinetProfile).",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "PupDatabasePath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "GunmoteDir",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "SteamDir",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "AutoInstall",
+          "Type": "switch",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "status",

@@ -3,7 +3,7 @@
 
   Source:      https://github.com/kburna243/frieds-retrogaming-kit  (VERSION 0.3.0)
   Kit branch:  origin/main
-  Kit commit:  e2885085a2fc843c2814da46a60fe7d01899b974
+  Kit commit:  b5df22f4a5321238e979e26cda5b6ce8f8c84920
   Fetched:     2026-09-26
   SHA-256:     e2fd880f499883950c03458d9a217673f79d56fdcff1472cbde67cc460ed6589
   ApiVersion:  1.0
