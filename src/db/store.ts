@@ -195,6 +195,22 @@ export class Store {
     return Number(result.lastInsertRowid);
   }
 
+  /** The newest session other than `excludeId` in which a person wrote something: what `--continue` picks up. */
+  lastConversation(excludeId: string): string | null {
+    const row = this.#db
+      .prepare("SELECT session_id FROM messages WHERE role = 'user' AND session_id != ? ORDER BY id DESC LIMIT 1")
+      .get(excludeId) as { session_id: string } | undefined;
+    return row?.session_id ?? null;
+  }
+
+  session(id: string): Record<string, unknown> | undefined {
+    return this.#db.prepare('SELECT * FROM sessions WHERE id = ?').get(id) as Record<string, unknown> | undefined;
+  }
+
+  setContinuedFrom(id: string, fromSessionId: string): void {
+    this.#db.prepare('UPDATE sessions SET continued_from = ? WHERE id = ?').run(fromSessionId, id);
+  }
+
   messages(sessionId: string) {
     return this.#db
       .prepare('SELECT * FROM messages WHERE session_id = ? ORDER BY id')

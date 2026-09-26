@@ -12,15 +12,16 @@ without the cabinet.
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test |
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'` |
+| Terminal UX (M3): streaming, `[round/max]`, `--max-rounds`, `chat --continue` / `--session`, `--json` on every command | works; tool calls reach the gate whole, a continued conversation carries words and never approvals, the CLI itself is tested through `main(argv, deps)` |
 | Report mode (M6): `fagent report [--since 7d] [--json]` | works; `src/report.ts` imports only the store and the memory wording, needs no kit root, says it is history and suggests nothing (tested) |
 | Schema migrations (`src/db/migrations.ts`) | works: a v1 database is brought to v2 (`sessions.transport`) on open, each step in a transaction; a newer database is refused |
 | Packaging (M2): `npm i -g .`, `fagent --version` | works; the bin link starts `dist/bin.js`, which hides only the SQLite experimental warning; CI installs it globally on Linux and Windows |
 | Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing (tested) |
-| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server; **not yet run on the cabinet**. Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
+| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and **on the cabinet** (`doctor --transport mcp`: `mcp-stdio · kit 0.3.0`, 34 operations; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
 | CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation | works; every operation it offers has exactly the kind, availability and parameters of the pinned snapshot (tested), including `backup.remove` and `profile.*` of kit 0.3.0 |
-| Tests | **116 passed**, 11 files, no network, no Windows, ~2 s |
+| Tests | **128 passed**, 12 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 63 files |
 | Pinned contract (`contract/`) | kit 0.3.0, commit `b5df22f4…`, ApiVersion 1.0, 34 operations; made by the fixed updater (asks the kit) |
@@ -71,7 +72,7 @@ server as a real child process):
   it stays `null`.
 - There are no exit codes over MCP. The transport reports 0 / 1 / 2 from the result, so `history` reads the same.
 
-Still open for M4: run it once on the cabinet (`fagent doctor --transport mcp`, then one change through the gate).
+Run on the cabinet on 2026-09-26: `doctor` and `status` over MCP, and `support.bundle` through the gate with a no ([LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Still worth doing once: a change with a yes over MCP.
 
 ## The acceptance criteria from the handoff, and where they are proven
 
@@ -117,7 +118,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 116 tests + repo rules — this is the bar
+npm run check        # typecheck + 128 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -135,7 +136,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 116 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 128 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -152,21 +153,21 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 116 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 128 passing tests. If anything fails, fix that
 before you start.
 
-Then do milestone M3 from ROADMAP.md: better model UX in the terminal. Streaming where the OpenAI-compatible
-endpoint supports it (tokens as they arrive, tool calls still assembled whole before the gate sees them), a visible
-round budget, `fagent chat --continue` (resume the last session with its history from the database, still behind
-the gate), and `--json` for every command. The gate order and the plan text shown to the person must not change;
-assert the call sequence with callTrace() as before.
+Then do milestone M5 from ROADMAP.md: scenarios. An eval folder with three cases — "my gun does not work in game
+X", "move the pinball build to a second drive", "what changed since yesterday" — each a user message, a fake-kit
+state and the expected *sequence* of kit calls (callTrace()), never the prose. They run against the fake cabinet
+with a real local model when FAGENT_EVAL_MODEL is set, and are skipped otherwise, so `npm run check` stays offline.
+A scenario passes when the call order matches and nothing was applied without the scripted person's yes.
 
-Finish by updating docs/HANDOFF.md (state table, and move M3 out of "next") and CHANGELOG.md, then
+Finish by updating docs/HANDOFF.md (state table, and move M5 out of "next") and CHANGELOG.md, then
 `npm run check` again. Report which commands you ran and what they printed. Do not push.
 ```
 
-Repeat the last paragraph with M5 (scenarios) and the same block works again. M1 (memory), M2 (packaging), M4 (MCP
-transport) and M6 (report) are done, and the database has a migration runner.
+M1 (memory), M2 (packaging), M3 (terminal UX), M4 (MCP transport) and M6 (report) are done, and the database has a
+migration runner. M5 is the last milestone of this roadmap.
 
 ## What only a human can do
 
@@ -176,10 +177,10 @@ Neither here nor in any cloud session:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
 2. Run one change through the gate for real, type `yes`, and look at what the kit wrote and at `fagent history`.
 3. Run `tools\Test-ContractDrift.ps1` after the kit releases, and refresh `contract/` with
-   `tools\Update-ContractSnapshot.ps1` when it drifted. **Due now:** re-run the fixed updater for 0.3.0, the
-   catalog snapshot is incomplete (see above).
-4. Run the MCP transport once on the cabinet: `fagent doctor --transport mcp` must show `mcp-stdio · kit 0.3.0`.
-5. File the issues in [KIT-REQUESTS.md](KIT-REQUESTS.md) on the kit's repository.
+   `tools\Update-ContractSnapshot.ps1` when it drifted.
+4. Run one change with a yes over MCP (`fagent run … --transport mcp --level operator`), and try `fagent chat
+   --continue` with the local model: the second evening should start where the first one stopped.
+5. Watch the kit issues #21–#23 ([KIT-REQUESTS.md](KIT-REQUESTS.md)) and move them to *Done* when the kit ships them.
 6. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
 
 ## Who owns what

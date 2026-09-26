@@ -28,6 +28,11 @@ export const MIGRATIONS: readonly Migration[] = [
     description: 'sessions.transport: which transport reached the kit (stdio-one-shot, mcp-stdio, fake)',
     sql: 'ALTER TABLE sessions ADD COLUMN transport TEXT;',
   },
+  {
+    version: 3,
+    description: 'sessions.continued_from: the session a `fagent chat --continue` picked up',
+    sql: 'ALTER TABLE sessions ADD COLUMN continued_from TEXT REFERENCES sessions(id);',
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS.reduce((latest, m) => Math.max(latest, m.version), BASE_SCHEMA_VERSION);

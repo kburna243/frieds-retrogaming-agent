@@ -13,8 +13,11 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import type { HarnessConfig } from './config.ts';
 import { loadConfig, ConfigError } from './config.ts';
-import { createHarness } from './harness.ts';
-import { TerminalHumanGateway } from './policy/human.ts';
+import { createHarness, type HarnessOptions } from './harness.ts';
+import { TerminalHumanGateway, type HumanGateway } from './policy/human.ts';
+import type { KitTransport } from './kit/transport.ts';
+import type { ModelGateway } from './llm/gateway.ts';
+import { resumeConversation, ResumeError } from './agent/resume.ts';
 import { ScriptedModelGateway, type ScriptStep } from './llm/scripted-model.ts';
 import { AgentLoop } from './agent/loop.ts';
 import { formatPlanForHuman } from './policy/plan.ts';
@@ -24,14 +27,25 @@ import { Store } from './db/store.ts';
 import { buildReport, formatReport, parseSince, REPORT_NOTE } from './report.ts';
 import { parseArgs, printHelp, fail, type Flags } from './cli/args.ts';
 
-export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
+/**
+ * What a test may hand in instead of the real thing: the fake cabinet, a scripted model, a scripted person.
+ * Production passes nothing — then the transport comes from the config, the model from its endpoint and the
+ * decision from the terminal. There is no way in here to approve anything: a `HumanGateway` still gets the plan.
+ */
+export interface CliDeps {
+  transport?: KitTransport;
+  gateway?: ModelGateway;
+  human?: HumanGateway;
+}
+
+export async function main(argv: readonly string[] = process.argv.slice(2), deps: CliDeps = {}): Promise<number> {
   const { command, flags, positional, params, switches, unknown } = parseArgs(argv);
   if (unknown.length > 0) {
     fail(unknown.join('\n'));
     return 2;
   }
   if (command === 'version' || flags.version === 'true') {
-    process.stdout.write(`fagent ${harnessVersion()}\n`);
+    process.stdout.write(flags.json === 'true' ? `${JSON.stringify({ version: harnessVersion() })}\n` : `fagent ${harnessVersion()}\n`);
     return 0;
   }
   if (!command || command === 'help' || flags.help === 'true') {
@@ -55,15 +69,15 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   try {
     switch (command) {
       case 'doctor':
-        return await runDoctor(config, flags.json === 'true');
+        return await runDoctor(config, flags.json === 'true', deps);
       case 'tools':
-        return await runTools(config, flags, flags.json === 'true');
+        return await runTools(config, flags, flags.json === 'true', deps);
       case 'status':
-        return await runStatus(config, flags.json === 'true');
+        return await runStatus(config, flags.json === 'true', deps);
       case 'run':
-        return await runChange(config, positional[0], flags, params, switches);
+        return await runChange(config, positional[0], flags, params, switches, deps);
       case 'chat':
-        return await runChat(config, flags);
+        return await runChat(config, flags, deps);
       case 'history':
         return runHistory(config, flags);
       case 'report':
@@ -75,6 +89,16 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
   } catch (error) {
     return reportError(error);
   }
+}
+
+/** Harness options from the injected parts; with none, `createHarness` builds the real ones. */
+function harnessOptions(deps: CliDeps, extra: HarnessOptions = {}): HarnessOptions {
+  return { ...(deps.transport ? { transport: deps.transport } : {}), ...extra };
+}
+
+/** With --json, standard output carries exactly one JSON document; everything for the person goes to stderr. */
+function humanFor(deps: CliDeps, json: boolean): HumanGateway {
+  return deps.human ?? new TerminalHumanGateway(json ? { write: (text) => process.stderr.write(text) } : {});
 }
 
 function configOptions(flags: Flags) {
@@ -91,7 +115,7 @@ function configOptions(flags: Flags) {
   return options;
 }
 
-async function runDoctor(config: HarnessConfig, json: boolean): Promise<number> {
+async function runDoctor(config: HarnessConfig, json: boolean, deps: CliDeps): Promise<number> {
   const major = Number.parseInt(process.versions.node.split('.')[0] ?? '0', 10);
   const rows: Array<{ area: string; level: 'OK' | 'INFO' | 'WARN' | 'ERROR'; detail: string }> = [
     { area: 'node', level: major >= 24 ? 'OK' : 'ERROR', detail: `${process.version} (node:sqlite needs >= 24)` },
@@ -113,7 +137,7 @@ async function runDoctor(config: HarnessConfig, json: boolean): Promise<number> 
 
   let ok = true;
   try {
-    const harness = await createHarness(config, { gateway: new ScriptedModelGateway() });
+    const harness = await createHarness(config, harnessOptions(deps, { gateway: new ScriptedModelGateway() }));
     rows.push({
       area: 'kit api',
       level: 'OK',
@@ -140,8 +164,8 @@ async function runDoctor(config: HarnessConfig, json: boolean): Promise<number> 
   return ok ? 0 : 1;
 }
 
-async function runTools(config: HarnessConfig, flags: Flags, json: boolean): Promise<number> {
-  const harness = await createHarness(config, { gateway: new ScriptedModelGateway() });
+async function runTools(config: HarnessConfig, flags: Flags, json: boolean, deps: CliDeps): Promise<number> {
+  const harness = await createHarness(config, harnessOptions(deps, { gateway: new ScriptedModelGateway() }));
   const tools = flags.kind ? harness.tools.filter((tool) => tool.kind === flags.kind) : harness.tools;
   if (json) {
     process.stdout.write(`${JSON.stringify({ apiVersion: harness.client.apiVersion, tools, catalog: harness.catalog }, null, 2)}\n`);
@@ -161,8 +185,8 @@ async function runTools(config: HarnessConfig, flags: Flags, json: boolean): Pro
   return 0;
 }
 
-async function runStatus(config: HarnessConfig, json: boolean): Promise<number> {
-  const harness = await createHarness(config, { gateway: new ScriptedModelGateway() });
+async function runStatus(config: HarnessConfig, json: boolean, deps: CliDeps): Promise<number> {
+  const harness = await createHarness(config, harnessOptions(deps, { gateway: new ScriptedModelGateway() }));
   const outcome = await harness.engine.read('status');
   const result = outcome.result;
   if (json) {
@@ -181,13 +205,20 @@ async function runStatus(config: HarnessConfig, json: boolean): Promise<number> 
 }
 
 /** One operation through the whole gate, no model involved — the way to rehearse the flow by hand. */
-async function runChange(config: HarnessConfig, operation: string | undefined, flags: Flags, params: readonly string[], switches: readonly string[]): Promise<number> {
+async function runChange(
+  config: HarnessConfig,
+  operation: string | undefined,
+  flags: Flags,
+  params: readonly string[],
+  switches: readonly string[],
+  deps: CliDeps,
+): Promise<number> {
   if (!operation) {
     fail('usage: fagent run <operation> [--param Name=Value ...] [--flag Name] [--kit <path>] [--level operator]');
     return 2;
   }
-  const human = new TerminalHumanGateway();
-  const harness = await createHarness(config, { human, gateway: new ScriptedModelGateway() });
+  const json = flags.json === 'true';
+  const harness = await createHarness(config, harnessOptions(deps, { human: humanFor(deps, json), gateway: new ScriptedModelGateway() }));
   const spec = await harness.client.findOperation(operation);
   if (!spec) {
     fail(`the kit has no operation "${operation}". fagent tools lists what exists.`);
@@ -196,10 +227,15 @@ async function runChange(config: HarnessConfig, operation: string | undefined, f
   }
   // A person typed the name: the gate is the same, but the operation need not be one the model is offered.
   const answer = await harness.engine.runOperation(operation, collectParameters(params, switches));
+  const code = answer.ok ? 0 : answer.stage === 'declined' ? 1 : 2;
 
-  if (flags.json === 'true') process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
-  else if (answer.plan && answer.stage !== 'applied') process.stdout.write(`${formatPlanForHuman(answer.plan)}\n`);
+  if (json) {
+    process.stdout.write(`${JSON.stringify(answer, null, 2)}\n`);
+    harness.close();
+    return code;
+  }
 
+  if (answer.plan && answer.stage !== 'applied') process.stdout.write(`${formatPlanForHuman(answer.plan)}\n`);
   if (answer.stage === 'applied') {
     const verification = answer.payload.verification as Record<string, unknown> | undefined;
     process.stdout.write(
@@ -213,17 +249,50 @@ async function runChange(config: HarnessConfig, operation: string | undefined, f
     if (answer.payload.hint) process.stdout.write(`hint: ${String(answer.payload.hint)}\n`);
   }
   harness.close();
-  return answer.ok ? 0 : answer.stage === 'declined' ? 1 : 2;
+  return code;
 }
 
-async function runChat(config: HarnessConfig, flags: Flags): Promise<number> {
-  const human = new TerminalHumanGateway();
-  const scripted = flags.demo === 'true' ? demoScript(config) : undefined;
-  const harness = await createHarness(config, { human, gateway: scripted });
-  const gateway = harness.gateway;
+async function runChat(config: HarnessConfig, flags: Flags, deps: CliDeps): Promise<number> {
+  const json = flags.json === 'true';
+  if (json && !flags.message) {
+    fail('--json needs --message: an interactive chat has no single answer to print as JSON');
+    return 2;
+  }
+  const maxRounds = flags['max-rounds'] === undefined ? 8 : Number(flags['max-rounds']);
+  if (!Number.isInteger(maxRounds) || maxRounds < 1 || maxRounds > 50) {
+    fail(`--max-rounds must be a whole number from 1 to 50, got "${String(flags['max-rounds'])}"`);
+    return 2;
+  }
 
+  const scripted = flags.demo === 'true' ? demoScript(config) : undefined;
+  const gateway = scripted ?? deps.gateway;
+  const harness = await createHarness(config, harnessOptions(deps, { human: humanFor(deps, json), ...(gateway ? { gateway } : {}) }));
+  const out = (text: string): void => {
+    if (!json) process.stdout.write(text);
+  };
+
+  // --continue picks up the newest conversation, --session <id> a particular one. Words only; see resume.ts.
+  let resumed: ReturnType<typeof resumeConversation> | undefined;
+  if (flags.continue === 'true' || flags.session) {
+    try {
+      resumed = resumeConversation(harness.store, {
+        currentSessionId: harness.sessionId,
+        ...(flags.session ? { sessionId: String(flags.session) } : {}),
+        anonymizeRequired: harness.gateway.info.anonymizeRequired,
+      });
+    } catch (error) {
+      if (!(error instanceof ResumeError)) throw error;
+      fail(`cannot continue: ${error.message}`);
+      harness.close();
+      return 2;
+    }
+    harness.store.setContinuedFrom(harness.sessionId, resumed.fromSessionId);
+  }
+
+  let round = 1;
+  let streaming = false;
   const loop = new AgentLoop({
-    gateway: gateway as never,
+    gateway: harness.gateway,
     engine: harness.engine,
     tools: harness.tools,
     store: harness.store,
@@ -232,43 +301,54 @@ async function runChat(config: HarnessConfig, flags: Flags): Promise<number> {
     apiVersion: harness.client.apiVersion,
     kitVersion: harness.kitVersion,
     memory: flags['no-memory'] !== 'true',
+    maxRounds,
+    stream: !json && flags['no-stream'] !== 'true',
+    ...(resumed ? { resume: resumed.messages } : {}),
     onEvent: (event) => {
-      if (flags.json === 'true') return;
-      if (event.type === 'assistant' && event.text) process.stdout.write(`\n${event.text}\n`);
-      if (event.type === 'tool-call') process.stdout.write(`\n→ ${event.tool} ${JSON.stringify(event.args)}\n`);
-      if (event.type === 'tool-answer') process.stdout.write(`  [${event.stage}${event.ok ? '' : ' · refused'}] ${event.summary}\n`);
-      if (event.type === 'round-limit') process.stdout.write(`\nstopped after ${event.rounds} rounds\n`);
+      if (event.type === 'round') round = event.round;
+      if (event.type === 'text') {
+        if (!streaming) out('\n');
+        streaming = true;
+        out(event.delta);
+      }
+      if (event.type === 'assistant') {
+        // Streamed text is already on the screen; only its line ends here. Nothing is printed twice.
+        out(event.streamed ? '\n' : `\n${event.text}\n`);
+        streaming = false;
+      }
+      if (event.type === 'tool-call') out(`\n→ [${round}/${maxRounds}] ${event.tool} ${JSON.stringify(event.args)}\n`);
+      if (event.type === 'tool-answer') out(`  [${event.stage}${event.ok ? '' : ' · refused'}] ${event.summary}\n`);
+      if (event.type === 'round-limit') out(`\nstopped after ${event.rounds} of ${maxRounds} rounds (--max-rounds raises it)\n`);
     },
   });
 
-  const print = (text: string): void => {
-    if (flags.json !== 'true') process.stdout.write(`${text}\n`);
-  };
+  if (resumed) {
+    const note = resumed.withheld > 0 ? `, ${resumed.withheld} left out: not anonymized for this model` : '';
+    out(`continuing session ${resumed.fromSessionId.slice(0, 8)} (${resumed.messages.length} messages${note})\n`);
+  }
 
   if (flags.message) {
     const run = await loop.ask(String(flags.message));
-    if (flags.json === 'true') {
-      process.stdout.write(`${JSON.stringify({ session: harness.sessionId, ...run }, null, 2)}\n`);
+    if (json) {
+      process.stdout.write(`${JSON.stringify({ session: harness.sessionId, continuedFrom: resumed?.fromSessionId ?? null, ...run }, null, 2)}\n`);
     } else {
-      if (run.answer) process.stdout.write(`\n${run.answer.startsWith('\n') ? run.answer.slice(1) : run.answer}\n`);
-      print(`\n(${run.rounds} rounds · ${run.toolCalls} tool calls · ${run.refused} refused · audit: ${config.dbPath})`);
+      out(`\n(${run.rounds} of ${run.maxRounds} rounds · ${run.toolCalls} tool calls · ${run.refused} refused · audit: ${config.dbPath})\n`);
     }
     harness.close();
     return 0;
   }
 
-  print(`fagent chat · level ${config.level} · model ${config.model.provider}:${config.model.model} · kit ${config.kitRoot}`);
-  print('a change is always shown as a plan and confirmed by you at this terminal. Ctrl+D ends.\n');
+  out(`fagent chat · level ${config.level} · model ${config.model.provider}:${config.model.model} · kit ${config.kitRoot}\n`);
+  out('a change is always shown as a plan and confirmed by you at this terminal. Ctrl+D ends.\n\n');
   const rl = createInterface({ input: process.stdin, output: process.stdout });
   for (;;) {
     const line = await new Promise<string>((resolve) => rl.question('you > ', resolve));
     const text = line.trim();
     if (!text) break;
-    const run = await loop.ask(text);
-    if (run.answer) process.stdout.write(`\n${run.answer.startsWith('\n') ? run.answer.slice(1) : run.answer}\n`);
+    await loop.ask(text);
   }
   rl.close();
-  print(`\n(session ${harness.sessionId} · audit: ${config.dbPath})`);
+  out(`\n(session ${harness.sessionId} · audit: ${config.dbPath})\n`);
   harness.close();
   return 0;
 }
@@ -292,6 +372,11 @@ function runHistory(config: HarnessConfig, flags: Flags): number {
   const store = Store.open(config.dbPath);
   const limit = Number(flags.last ?? 20);
   const rows = store.recentToolCalls(Number.isFinite(limit) ? limit : 20);
+  if (flags.json === 'true') {
+    process.stdout.write(`${JSON.stringify({ database: config.dbPath, toolCalls: rows }, null, 2)}\n`);
+    store.close();
+    return 0;
+  }
   if (rows.length === 0) {
     process.stdout.write(`nothing logged yet in ${config.dbPath}\n`);
     store.close();

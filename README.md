@@ -28,7 +28,7 @@
 > memory, the CLI and the full test suite work. New and not yet released: a new session starts from a digest of the
 > earlier ones (M1), the kit's MCP server can be used as transport (M4, not yet run on a cabinet), `npm i -g .`
 > installs `fagent` (M2), `fagent report` summarizes a period (M6), and the database migrates itself. The contract
-> is pinned to kit v0.3.0. Open: terminal UX (M3) and scenarios (M5). See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> is pinned to kit v0.3.0. Streaming and `chat --continue` are in (M3). Open: scenarios (M5). See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -137,7 +137,10 @@ fagent chat --demo              # no model at all: a scripted diagnosis
 fagent history --last 20        # what the harness did, from its own database
 fagent report --since 7d        # a summary of the last week for a person (--json for machines)
 ```
-`chat` starts with a short digest of the earlier sessions; `--no-memory` starts without it.
+`chat` starts with a short digest of the earlier sessions (`--no-memory` starts without it) and shows the answer as it
+arrives (`--no-stream` waits for the whole of it). `--continue` carries on the last conversation, its words only: a
+change still needs your yes. `--max-rounds` sets how many rounds a question may take, and `--json` on any command
+prints one JSON document.
 
 > [!TIP]
 > The level is `read-only` unless you pass `--level operator`. There is no level that skips the dry run or your yes.
