@@ -11,6 +11,7 @@ import type { HarnessConfig } from './config.ts';
 import { KitClient, ApiVersionMismatchError } from './kit/client.ts';
 import type { KitTransport } from './kit/transport.ts';
 import { StdioKitTransport } from './kit/stdio-transport.ts';
+import { McpKitTransport } from './kit/mcp-transport.ts';
 import { buildTools, filterReadTools, type ToolDefinition } from './kit/tools.ts';
 import type { OperationSpec } from './kit/types.ts';
 import { Store } from './db/store.ts';
@@ -41,16 +42,16 @@ export interface Harness {
   readonly catalog: OperationSpec[];
   readonly engine: PolicyEngine;
   readonly gateway: ModelGateway;
-  /** The kit's version is not part of API v1 — only `ApiVersion` is pinned. Never read from kit files. */
+  /** The kit's version as the kit reports it (MCP `serverInfo`), else null. Never read from kit files. */
   readonly kitVersion: string | null;
   close(): void;
 }
 
 export async function createHarness(config: HarnessConfig, options: HarnessOptions = {}): Promise<Harness> {
-  const transport: KitTransport = options.transport ?? new StdioKitTransport({ kitRoot: config.kitRoot });
-  const client = new KitClient(transport);
   const level = options.level ?? config.level;
   const anonymize = config.anonymize || (options.gateway?.info.anonymizeRequired ?? false);
+  const transport: KitTransport = options.transport ?? defaultTransport(config, level, anonymize);
+  const client = new KitClient(transport);
 
   const gateway =
     options.gateway ??
@@ -73,6 +74,11 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     throw error;
   }
 
+  // A transport with a long-lived server starts it now, so a server that does not come up stops the start-up and
+  // not the first tool call. The kit version is whatever the kit itself says, or nothing.
+  await transport.connect?.();
+  const kitVersion = transport.kitVersion ?? null;
+
   const allTools = buildTools(catalog);
   const tools = level === 'read-only' ? filterReadTools(allTools) : allTools;
 
@@ -83,8 +89,8 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     model: gateway.info.model,
     provider: gateway.info.provider,
     apiVersion: client.apiVersion,
-    kitVersion: null,
-    note: `tools=${tools.length} catalog=${catalog.length}`,
+    kitVersion,
+    note: `tools=${tools.length} catalog=${catalog.length} transport=${transport.label}`,
   });
 
   const engine = new PolicyEngine({
@@ -109,13 +115,27 @@ export async function createHarness(config: HarnessConfig, options: HarnessOptio
     catalog,
     engine,
     gateway,
-    kitVersion: null,
+    kitVersion,
     close: () => {
       store.endSession(session.id);
       store.close();
-      transport.close?.();
+      void transport.close?.();
     },
   };
+}
+
+/** stdio is the reference. MCP is only used when asked for, and even then the catalog comes from `Invoke-KitApi.ps1`. */
+function defaultTransport(config: HarnessConfig, level: PermissionLevel, anonymize: boolean): KitTransport {
+  const stdio = new StdioKitTransport({ kitRoot: config.kitRoot });
+  if (config.transport !== 'mcp') return stdio;
+  return new McpKitTransport({
+    kitRoot: config.kitRoot,
+    catalogTransport: stdio,
+    anonymize,
+    // Defence in depth: at read-only the server itself offers no change tool.
+    readOnly: level === 'read-only',
+    culture: config.culture,
+  });
 }
 
 /** A refused start-up is still an event worth finding in the database later. */

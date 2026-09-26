@@ -13,13 +13,14 @@ without the cabinet.
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'` |
 | Memory read back (M1): digest of earlier sessions in the system prompt | works; fixed-size, local, anonymized for a cloud model, grants nothing (tested) |
+| MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server; **not yet run on the cabinet**. Catalog still via `Invoke-KitApi.ps1`; kit version from `serverInfo` |
 | Model gateways: local OpenAI-compatible (Ollama) + cloud with a hard `-Anonymize` guard | works; the cloud refusal is tested |
 | CLI: `doctor`, `tools`, `status`, `run`, `chat`, `history` | works; exit 0/1/2/3, no `--yes` anywhere; `chat --no-memory` |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation | works, cross-checked against the pinned snapshot |
-| Tests | **74 passed**, 6 files, no network, no Windows, ~2 s |
+| Tests | **87 passed**, 7 files, no network, no Windows, ~2 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
-| Repo rule checker (personal data, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 56 files |
-| Pinned contract (`contract/`) | kit 0.2.0, commit `c0198187…`, ApiVersion 1.0. **Behind:** the kit is at 0.3.0 (see below) |
+| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 63 files |
+| Pinned contract (`contract/`) | kit 0.3.0, commit `e2885085…`, ApiVersion 1.0. `API.md` is current; **`catalog-v1.json` is incomplete** (see below) and must be regenerated with the fixed updater |
 
 Checked on a real Windows machine against a real kit: `status` read the doctor live; a step whose precondition was not
 met came back `NeedsUser` and the gate refused to show a plan (`DRY_RUN_NOT_SHOWNABLE`) instead of asking to apply;
@@ -30,25 +31,46 @@ sound like a missing feature.
 
 ## The kit moved: v0.3.0
 
-Compared by reading the kit's repository (not the cabinet), between `c019818` (our snapshot) and `7e7d546`
+Compared by reading the kit's repository (not the cabinet), between `c019818` (the old snapshot) and `7e7d546`
 (release v0.3.0):
 
-- **New operation `backup.remove`** (Change, `Path`). Not in `contract/`, not in the fake cabinet, not offered as a
-  tool. Decide whether it gets a fixed tool (it deletes one kit backup, nothing else) or stays reachable only
+- **New operation `backup.remove`** (Change, `Path`). Not in the fake cabinet, not offered as a tool. Decide whether it gets a fixed tool (it deletes one kit backup, nothing else) or stays reachable only
   through `fagent run`.
 - **`profile.import` / `profile.export` are stricter:** a command without its own `-WhatIf` is not run at all without
   `-Apply` (the dry run returns the call), `NeedsUser`/`Failed` rows land in `Warnings`/`Errors`, and `AutoInstall`
   is refused unless the command takes `-Approve`. The fake cabinet should learn this before a test relies on it.
-- **An MCP server** (`api\Start-KitMcpServer.ps1`, stdio, JSON-RPC 2.0). This unblocks M4. Its tools take `apply`
-  and `approved` as booleans, so they must never be handed to the model as they are: the MCP transport sits behind
-  `KitTransport`, and only `PolicyEngine` fills those two fields. Results are anonymized unless the server is started
-  with `-NoAnonymize`.
+- **An MCP server** (`api\Start-KitMcpServer.ps1`, stdio, JSON-RPC 2.0). M4 is built on it, see below.
 - **`ApiVersion` is still `1.0`** although an operation was added. That is the kit's to fix; the issue text is in
   [KIT-REQUESTS.md](KIT-REQUESTS.md).
 
-Order: refresh `contract/` on the cabinet first (`tools\Test-ContractDrift.ps1`, then
-`tools\Update-ContractSnapshot.ps1`), then bring `test/kit/fake-kit.mjs` to the new snapshot — `test/contract.test.ts`
-will tell you exactly where it differs.
+**The first refresh to 0.3.0 missed part of the catalog.** `API.md` in `contract/` is right, but
+`catalog-v1.json` still lists 33 operations: no `backup.remove`, and `profile.*` as not available without parameters.
+The cause was on our side: `tools/Update-ContractSnapshot.ps1` rebuilt the catalog from a hand-written list instead of
+asking the kit. It now checks out the pinned commit into a temporary git worktree and asks that kit's own
+`Invoke-KitApi.ps1 -Operation operations`. Re-run it on the cabinet, then `tools\Test-ContractDrift.ps1` must say the
+snapshot matches. After that, bring `test/kit/fake-kit.mjs` to the new snapshot (`backup.remove`, `profile.*` with
+their parameters) — `test/contract.test.ts` will tell you where it differs.
+
+## M4: the MCP transport
+
+`src/kit/mcp-transport.ts`, switched on with `--transport mcp` or `FAGENT_TRANSPORT=mcp`; stdio stays the default
+and the reference. Decisions, each tested in `test/mcp-transport.test.ts` against `test/kit/fake-kit-mcp.mjs` (the
+server as a real child process):
+
+- **The catalog still comes from `Invoke-KitApi.ps1`.** The server leaves out `operations`, and with it `Interactive`
+  and the catalog's `ApiVersion`. Reconstructing them from `tools/list` would be inventing protocol, so the MCP
+  transport hands `operations` to the stdio transport. The ApiVersion pin works exactly as before.
+- **`apply`/`approved` are filled by the transport from `KitRequest`**, which only `PolicyEngine` sets. A parameter
+  whose name is `apply` or `approved` in any case is refused before anything is sent: the server compares like
+  PowerShell does, so a step parameter `Apply` would otherwise become the flag.
+- **Anonymizing is fixed when the server starts.** A call that must be anonymized is refused by a server started with
+  `-NoAnonymize`; it never falls back to real paths.
+- **At level `read-only` the server is started with `-ReadOnly`**, so it has no change tool at all.
+- **The kit version comes from the kit:** `serverInfo.version` in `initialize` lands in the session row. With stdio
+  it stays `null`.
+- There are no exit codes over MCP. The transport reports 0 / 1 / 2 from the result, so `history` reads the same.
+
+Still open for M4: run it once on the cabinet (`fagent doctor --transport mcp`, then one change through the gate).
 
 ## The acceptance criteria from the handoff, and where they are proven
 
@@ -74,16 +96,15 @@ All seven are `test/acceptance.test.ts`, and all seven pass here on Windows and 
 
 Not oversights — decisions, each with its reason.
 
-- **No MCP transport yet.** The kit ships its server since v0.3.0 (see above). The seam exists (`KitTransport`), so
-  `src/kit/mcp-transport.ts` is an addition, not a refactor. Follow the kit's `API.md`; do not invent protocol on
-  this side.
+- **MCP is off by default.** stdio is the reference until the MCP transport has run on the cabinet. Even with
+  `--transport mcp`, one `Invoke-KitApi.ps1` process answers the catalog at start.
 - **Memory is a digest, not a search.** `src/agent/memory.ts` summarizes the last five sessions into the system
   prompt (M1). There is no retrieval by topic and no memory tool for the model; add one only if a real conversation
   shows the digest is not enough. `recentToolCalls()` is still unused — the digest reads per session.
 - **No packaging yet.** `dist/` builds and `fagent` works from source; an installed global command, `--version`, and
   completion are M2.
-- **`kitVersion` is always `null` in a session row.** API v1 does not report it, and reading `VERSION` from the kit's
-  folder would cross the boundary. The request to the kit is written up in [KIT-REQUESTS.md](KIT-REQUESTS.md) — do
+- **`kitVersion` is `null` in a session row over stdio.** API v1 does not report it, and reading `VERSION` from the
+  kit's folder would cross the boundary. Over MCP the server says it. The request to the kit is written up in [KIT-REQUESTS.md](KIT-REQUESTS.md) — do
   not work around it here.
 - **No schema migrations.** One schema, one version. Add the migration runner before a second cabinet installs an
   older database.
@@ -95,7 +116,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 74 tests + repo rules — this is the bar
+npm run check        # typecheck + 87 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -113,7 +134,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 74 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 87 tests
 run against it on Linux.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -130,7 +151,7 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 74 passing tests. If anything fails, fix that
+Run `npm install && npm run check` first and make sure you see 87 passing tests. If anything fails, fix that
 before you start.
 
 Then do milestone M2 from ROADMAP.md: packaging. `npm i -g .` followed by `fagent doctor` must work from any
@@ -142,8 +163,8 @@ Finish by updating docs/HANDOFF.md (state table, and move M2 out of "next") and 
 `npm run check` again. Report which commands you ran and what they printed. Do not push.
 ```
 
-Repeat the last paragraph with a different milestone (M3 terminal UX, M4 MCP transport — the kit ships its server
-since v0.3.0, M5 scenarios, M6 report mode) and the same block works again. M1 (memory) is done.
+Repeat the last paragraph with a different milestone (M3 terminal UX, M5 scenarios, M6 report mode) and the same
+block works again. M1 (memory) and M4 (MCP transport) are done.
 
 ## What only a human can do
 
@@ -153,9 +174,11 @@ Neither here nor in any cloud session:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools\Start-SmokeTest.ps1 -KitRoot D:\cabinet\frieds-retrogaming-kit`
 2. Run one change through the gate for real, type `yes`, and look at what the kit wrote and at `fagent history`.
 3. Run `tools\Test-ContractDrift.ps1` after the kit releases, and refresh `contract/` with
-   `tools\Update-ContractSnapshot.ps1` when it drifted. **Due now:** the kit is at 0.3.0, the snapshot at 0.2.0.
-4. File the two issues in [KIT-REQUESTS.md](KIT-REQUESTS.md) on the kit's repository.
-5. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
+   `tools\Update-ContractSnapshot.ps1` when it drifted. **Due now:** re-run the fixed updater for 0.3.0, the
+   catalog snapshot is incomplete (see above).
+4. Run the MCP transport once on the cabinet: `fagent doctor --transport mcp` must show `mcp-stdio · kit 0.3.0`.
+5. File the issues in [KIT-REQUESTS.md](KIT-REQUESTS.md) on the kit's repository.
+6. Decide what the first chat conversation should be. Everything above is plumbing for that one question.
 
 ## Who owns what
 

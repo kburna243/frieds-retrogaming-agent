@@ -32,14 +32,16 @@ describe('acceptance 1 — offline: works with a local model and no network', ()
     });
     expect(offenders).toEqual([]);
 
-    // Only the kit transport starts a process, and it starts it without a shell.
+    // Only the two kit transports start a process, and they start it without a shell.
     const spawners = files.filter((name) => {
       const text = readFileSync(new URL(name, root), 'utf8');
       return /node:child_process/.test(text);
     });
-    expect(spawners.map((name) => name.split('\\').join('/')).sort()).toEqual(['kit/stdio-transport.ts']);
-    const transport = readFileSync(new URL('kit/stdio-transport.ts', root), 'utf8');
-    expect(transport).not.toMatch(/execSync|spawnSync?\([^)]*shell:\s*true|\bshell:\s*true/);
+    expect(spawners.map((name) => name.split('\\').join('/')).sort()).toEqual(['kit/mcp-transport.ts', 'kit/stdio-transport.ts']);
+    for (const file of ['kit/stdio-transport.ts', 'kit/mcp-transport.ts']) {
+      const transport = readFileSync(new URL(file, root), 'utf8');
+      expect(transport).not.toMatch(/execSync|spawnSync?\([^)]*shell:\s*true|\bshell:\s*true/);
+    }
   });
 });
 

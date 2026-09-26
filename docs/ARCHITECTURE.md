@@ -15,7 +15,7 @@ code. Everything to the left of that line is this repository; everything to the 
 │  PolicyEngine     src/policy/           │  THE GATE: dry run → plan → human → apply → verify
 ├─────────────────────────────────────────┤
 │  KitClient        src/kit/              │  catalog, ApiVersion pin, parameter validation
-│  KitTransport     src/kit/              │  seam: stdio today, MCP later
+│  KitTransport     src/kit/              │  seam: stdio (reference) or MCP
 ├─────────────────────────────────────────┤
 │  Store            src/db/               │  sessions, messages, tool calls, plans, approvals, results
 └─────────────────────────────────────────┘
@@ -43,6 +43,7 @@ Three consequences the code keeps re-proving:
 | --- | --- |
 | `types.ts` | the wire contract as types: `OperationResult` (16 PascalCase fields), `OperationSpec`, `CatalogOutcome`, plus the strict parser |
 | `transport.ts` | `buildKitArgv()` — the pure function that turns a request into the exact PowerShell argv |
+| `mcp-transport.ts` | the kit's MCP server as a second transport: `operations` still via stdio, `apply`/`approved` filled from `KitRequest` only, reserved argument names refused, anonymizing fixed at server start |
 | `stdio-transport.ts` | `execFile` with no shell, a 32 MB buffer, a 10-minute cap, and one JSON document out |
 | `client.ts` | `KitClient`: catalog cache, `ApiVersion` pin, `validateParameters()` against the live spec |
 | `tools.ts` | catalog → model-facing tool definitions; the nine fixed tools plus `run_step` |
@@ -100,9 +101,9 @@ thing left for the cabinet is `tools/Start-SmokeTest.ps1`.
 
 ## Deliberate gaps
 
-- **No MCP transport yet.** The kit ships an MCP server since v0.3.0. The seam exists; `src/kit/mcp-transport.ts` is
-  the file to write. Its tools take `apply`/`approved`, so the transport maps `KitRequest` onto them and the model
-  never sees them. Until then, one-shot stdio is the transport.
+- **MCP is a second transport, not the reference.** `src/kit/mcp-transport.ts` talks to the kit's server, but the
+  catalog still comes from `Invoke-KitApi.ps1`, because the server leaves out `operations` and with it `Interactive`
+  and the catalog's `ApiVersion`. The model never sees the server's tools; the harness builds its own from the catalog.
 - **No `apply`/`approved` in any public API on purpose.** There is no exported function that takes a boolean to
   skip the gate. If someone adds one, `tools/check-repo-rules.mjs` and the acceptance tests are the reviewers.
 - **One schema, no migration runner.** Version the table before shipping this on a second cabinet.

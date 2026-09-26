@@ -33,6 +33,10 @@ export interface KitTransport {
   /** `stdio-one-shot` | `mcp-stdio` | `fake`. Only for logging. */
   readonly label: string;
   call(request: KitRequest): Promise<KitRawCall>;
+  /** A transport with a long-lived peer (MCP) starts it here; the one-shot transport has nothing to start. */
+  connect?(): Promise<void>;
+  /** The kit's own version, when the transport learns it from the kit (MCP `serverInfo`). Never read from files. */
+  readonly kitVersion?: string | null;
   close?(): void | Promise<void>;
 }
 

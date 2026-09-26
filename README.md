@@ -25,9 +25,9 @@
 
 > [!NOTE]
 > **Status: v0.1.0**, verified against a real kit on a Windows cabinet. The client, the policy gate, the SQLite
-> memory, the CLI and the full test suite work. New and not yet released: a new session now starts from a digest of
-> the earlier ones (M1). Open: packaging, the MCP transport, and the snapshot of kit v0.3.0 (the pinned contract is
-> still v0.2.0). See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
+> memory, the CLI and the full test suite work. New and not yet released: a new session starts from a digest of the
+> earlier ones (M1), and the kit's MCP server can be used as transport (M4, not yet run on a cabinet). Open:
+> packaging, and a complete catalog snapshot of kit v0.3.0. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
 ---
 
@@ -86,7 +86,7 @@ PC at all.
 | **CLI `fagent`** | ✅ Stable | `doctor`, `tools`, `status`, `run`, `chat`, `history`; no `--yes` anywhere |
 | **Fake cabinet** (`test/kit/`) | ✅ Stable | the kit API as a second implementation, so all tests run on Linux |
 | **Packaging** (global install, `--version`) | 🚧 Planned (M2) | see [ROADMAP](ROADMAP.md) |
-| **MCP transport** | 🚧 Planned (M4) | the kit ships its server in v0.3.0; the seam is ready |
+| **MCP transport** (M4) | 🆕 Unreleased | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
 | **Report mode** (`fagent report`) | 🚧 Planned (M6) | a summary from the audit trail, no kit writes |
 
 ---
@@ -114,6 +114,7 @@ npm run check          # typecheck + tests + repo rules
 ```bash
 export FAGENT_KIT_ROOT='D:\cabinet\frieds-retrogaming-kit'
 node --no-warnings src/cli.ts doctor          # what can be reached, which ApiVersion the kit speaks
+node --no-warnings src/cli.ts doctor --transport mcp   # the same over the kit's MCP server (kit >= 0.3.0)
 node --no-warnings src/cli.ts status          # the kit's health check, read-only
 node --no-warnings src/cli.ts tools --level operator
 ```
@@ -144,7 +145,7 @@ The full Windows check, on the cabinet:
 
 | Path | What it is |
 | :--- | :--- |
-| `src/kit/` | the API client: argv building, one-shot stdio transport, `OperationResult` parsing, catalog → tool schemas |
+| `src/kit/` | the API client: argv building, one-shot stdio transport, MCP transport, `OperationResult` parsing, catalog → tool schemas |
 | `src/policy/` | the gate: dry run first, plan, one human yes, then `-Apply`, then verify; every rule lives here |
 | `src/db/` | SQLite memory via `node:sqlite` |
 | `src/llm/` | model gateways, the anonymization guard, a scripted model for tests |

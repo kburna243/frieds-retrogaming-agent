@@ -25,9 +25,9 @@
 
 > [!NOTE]
 > **Stand: v0.1.0**, gegen ein echtes Kit auf einem Windows-Automaten geprüft. Client, Policy-Gate, SQLite-Gedächtnis,
-> CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt jetzt mit
-> einer Zusammenfassung der früheren (M1). Offen: Packaging, der MCP-Transport und der Snapshot von Kit v0.3.0 (der
-> festgeschriebene Vertrag ist noch v0.2.0). Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
+> CLI und die ganze Testsuite funktionieren. Neu und noch nicht veröffentlicht: Eine neue Sitzung beginnt mit einer
+> Zusammenfassung der früheren (M1), und der MCP-Server des Kits lässt sich als Transport nutzen (M4, noch nicht am
+> Automaten gelaufen). Offen: Packaging und ein vollständiger Katalog-Snapshot von Kit v0.3.0. Siehe [docs/HANDOFF.md](docs/HANDOFF.md), das [CHANGELOG](CHANGELOG.md)
 > und die [ROADMAP](ROADMAP.md).
 
 ---
@@ -88,7 +88,7 @@ Modell verlässt gar nichts den PC.
 | **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`; nirgends ein `--yes` |
 | **Fake-Automat** (`test/kit/`) | ✅ Stabil | die Kit-API als zweite Implementierung, damit alle Tests unter Linux laufen |
 | **Packaging** (globale Installation, `--version`) | 🚧 Geplant (M2) | siehe [ROADMAP](ROADMAP.md) |
-| **MCP-Transport** | 🚧 Geplant (M4) | das Kit liefert seinen Server mit v0.3.0; die Naht ist vorbereitet |
+| **MCP-Transport** (M4) | 🆕 Unveröffentlicht | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
 | **Berichtsmodus** (`fagent report`) | 🚧 Geplant (M6) | eine Zusammenfassung aus dem Audit-Trail, ohne Schreibzugriff aufs Kit |
 
 ---
@@ -116,6 +116,7 @@ npm run check          # Typecheck + Tests + Repo-Regeln
 ```bash
 export FAGENT_KIT_ROOT='D:\cabinet\frieds-retrogaming-kit'
 node --no-warnings src/cli.ts doctor          # was erreichbar ist, welche ApiVersion das Kit spricht
+node --no-warnings src/cli.ts doctor --transport mcp   # dasselbe über den MCP-Server des Kits (Kit >= 0.3.0)
 node --no-warnings src/cli.ts status          # der Gesundheitscheck des Kits, nur lesend
 node --no-warnings src/cli.ts tools --level operator
 ```
@@ -148,7 +149,7 @@ Der vollständige Windows-Check, am Automaten:
 
 | Pfad | Was es ist |
 | :--- | :--- |
-| `src/kit/` | API-Client: argv-Bau, One-Shot-stdio-Transport, `OperationResult`-Parsing, Katalog → Tool-Schemata |
+| `src/kit/` | API-Client: argv-Bau, One-Shot-stdio-Transport, MCP-Transport, `OperationResult`-Parsing, Katalog → Tool-Schemata |
 | `src/policy/` | das Gate: erst Dry Run, Plan, ein Ja eines Menschen, dann `-Apply`, dann Verifikation |
 | `src/db/` | SQLite-Gedächtnis über `node:sqlite` |
 | `src/llm/` | Modell-Gateways, die Anonymisierungs-Prüfung, ein Skript-Modell für Tests |

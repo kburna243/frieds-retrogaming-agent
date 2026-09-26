@@ -77,6 +77,7 @@ function configOptions(flags: Flags) {
   if (flags.provider) options.provider = flags.provider;
   if (flags['base-url']) options.baseUrl = flags['base-url'];
   if (flags['no-anonymize'] === 'true') options.noAnonymize = true;
+  if (flags.transport) options.transport = flags.transport;
   return options;
 }
 
@@ -107,6 +108,11 @@ async function runDoctor(config: HarnessConfig, json: boolean): Promise<number> 
       area: 'kit api',
       level: 'OK',
       detail: `ApiVersion ${harness.client.apiVersion} · ${harness.catalog.length} operations · ${harness.tools.length} tools at this level`,
+    });
+    rows.push({
+      area: 'transport',
+      level: 'OK',
+      detail: `${harness.client.transport.label}${harness.kitVersion ? ` · kit ${harness.kitVersion}` : ''}`,
     });
     const wizardOnly = harness.catalog.filter((op) => op.Interactive).map((op) => op.Name);
     if (wizardOnly.length > 0) rows.push({ area: 'wizard-only', level: 'INFO', detail: wizardOnly.join(', ') });

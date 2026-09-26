@@ -26,6 +26,8 @@ export interface HarnessConfig {
   culture: KitCulture;
   /** Send `-Anonymize` with every kit call. Forced true for a cloud model. */
   anonymize: boolean;
+  /** `stdio` (one `Invoke-KitApi.ps1` process per call, the reference) or `mcp` (the kit's MCP server, kit ≥ 0.3.0). */
+  transport: 'stdio' | 'mcp';
   model: ModelConfig;
 }
 
@@ -41,6 +43,7 @@ export interface LoadOptions extends Partial<Record<keyof HarnessConfig, unknown
   provider?: string;
   model?: string;
   baseUrl?: string;
+  transport?: string;
   /** Only `chat` needs a model; doctor, tools, status and run work without one. */
   requireModel?: boolean;
 }
@@ -76,6 +79,11 @@ export function loadConfig(options: LoadOptions = {}, env: NodeJS.ProcessEnv = p
     throw new ConfigError(`--culture must be en-US or de-DE, got ${culture}`);
   }
 
+  const transport = options.transport ?? env.FAGENT_TRANSPORT ?? 'stdio';
+  if (transport !== 'stdio' && transport !== 'mcp') {
+    throw new ConfigError(`--transport must be stdio or mcp, got ${transport}`);
+  }
+
   const baseUrl =
     options.baseUrl ??
     (provider === 'cloud' ? env.FAGENT_CLOUD_BASE_URL ?? env.OPENAI_BASE_URL : env.FAGENT_OLLAMA_URL ?? DEFAULT_OLLAMA);
@@ -98,6 +106,7 @@ export function loadConfig(options: LoadOptions = {}, env: NodeJS.ProcessEnv = p
     level,
     culture,
     anonymize,
+    transport,
     model: {
       provider,
       baseUrl: baseUrl ?? DEFAULT_OLLAMA,

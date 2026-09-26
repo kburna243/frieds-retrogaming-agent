@@ -17,17 +17,32 @@ harness version, independent of the kit's.
   put back to unspent, still grants nothing (the gate asks again, a no applies nothing); the digest stays within its
   size; the cloud digest carries nothing personal.
 - `docs/KIT-REQUESTS.md`: what this repository needs from the kit, written as issues for the kit's repository.
+- **MCP transport (M4)** (`src/kit/mcp-transport.ts`): the kit's `api\Start-KitMcpServer.ps1` (kit ≥ 0.3.0) as a
+  second `KitTransport`, chosen with `--transport mcp` or `FAGENT_TRANSPORT=mcp`; stdio stays the default. The
+  catalog and its ApiVersion still come from `Invoke-KitApi.ps1`. `apply`/`approved` are filled from `KitRequest`
+  only; a parameter named `apply`/`approved` in any case is refused; a call that must be anonymized is refused by a
+  server started with `-NoAnonymize`; at level `read-only` the server runs with `-ReadOnly`. The kit version from
+  `serverInfo` is recorded in the session row and shown by `fagent doctor`.
+- `test/kit/fake-kit-mcp.mjs`, the MCP server of the fake cabinet, and `test/mcp-transport.test.ts` (13 tests,
+  including the full gate order over MCP).
+- Repo rule: an absolute Windows path must start at a synthetic root (`D:\cabinet`, `D:\Pinball`, `C:\RetroBat`, …).
 
 ### Changed
 
 - `README.md` / `README.de.md` follow the layout of the kit's README: header, badges, status note, feature status,
   quickstart, safety principles, documentation index.
-- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (74).
+- Test counts in `CLAUDE.md`, `ROADMAP.md` and `docs/HANDOFF.md` brought up to date (87).
+- `tools/Update-ContractSnapshot.ps1` asks the kit for its catalog (`Invoke-KitApi.ps1 -Operation operations` in a
+  temporary git worktree of the pinned commit) instead of rebuilding it from a hand-written list, which had missed
+  `backup.remove` and the `profile.*` parameters of kit 0.3.0. `-KitRoot` is now mandatory; the old default was a
+  real local path.
+- The acceptance test that allows only the kit transports to start a process now names both of them.
 
 ### Known gaps
 
-- The pinned contract is kit 0.2.0. The kit is at 0.3.0 (new `backup.remove`, stricter `profile.*` rules, an MCP
-  server). The snapshot must be refreshed on the cabinet with `tools\Update-ContractSnapshot.ps1`.
+- `contract/catalog-v1.json` for kit 0.3.0 is incomplete (made by the old updater). Re-run the fixed
+  `tools\Update-ContractSnapshot.ps1` on the cabinet; then the fake cabinet learns `backup.remove` and `profile.*`.
+- The MCP transport has not run against the real kit yet.
 
 ## 0.1.0 — first release of the harness
 

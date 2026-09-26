@@ -5,7 +5,7 @@ The harness version is ours; the kit's contract is theirs. Nothing here asks the
 ## Now (0.1)
 
 Working: kit client, live-catalog tools, the policy gate, SQLite memory, CLI, model gateways with the anonymize
-guard, the fake cabinet and 74 tests. Memory is read back into a new session (M1, unreleased). See `docs/HANDOFF.md` for the state in more honest detail.
+guard, the fake cabinet and 87 tests. Unreleased: memory read back into a new session (M1) and the MCP transport (M4). See `docs/HANDOFF.md` for the state in more honest detail.
 
 ## Next
 
@@ -13,7 +13,6 @@ guard, the fake cabinet and 74 tests. Memory is read back into a new session (M1
 | --- | --- | --- |
 | M2 | **Packaging** | `npm i -g .` then `fagent doctor` from any folder; `dist/` complete (schema.sql included); a `--version`; Windows `.cmd` shim not needed but checked. |
 | M3 | **Better model UX in the terminal** | Streaming where the endpoint supports it, a token/round budget that is visible, `fagent chat --continue`, `--json` for every command. |
-| M4 | **MCP transport** | A second `KitTransport` behind the same seam. The kit ships its server since v0.3.0 (`api\Start-KitMcpServer.ps1`). Its tools take `apply`/`approved`, so they are never handed to the model: the transport maps `KitRequest` onto them and only `PolicyEngine` fills those two fields. No tool-definition or policy change. Off by default; stdio stays the reference. |
 | M5 | **Scenarios** | A small eval folder: "gun does not work in game X", "pinball build to a second drive", "what changed since yesterday". Run against the fake cabinet with a real local model, asserting the *call order*, not the prose. |
 | M6 | **Read-only report mode** | `fagent report --since 7d` builds a human summary from the audit trail (no kit writes), for the vault. |
 

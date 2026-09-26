@@ -90,6 +90,7 @@ Common flags
   --provider local|cloud                                           (env FAGENT_PROVIDER, default local)
   --model <name>                                                 (env FAGENT_MODEL / FAGENT_CLOUD_MODEL)
   --base-url <url>                                               (env FAGENT_OLLAMA_URL / FAGENT_CLOUD_BASE_URL)
+  --transport stdio|mcp                                          (env FAGENT_TRANSPORT, default stdio; mcp needs kit ≥ 0.3.0)
   --no-anonymize    local model only: keep real paths in the plan (default: always -Anonymize)
   --no-memory       chat only: start without the digest of earlier sessions
   --json            machine-readable output

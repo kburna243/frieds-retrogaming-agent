@@ -28,9 +28,23 @@ The harness records `kitVersion: null` in every session, because API v1 does not
 from the kit's folder would cross the boundary. The MCP server added in v0.3.0 already reads `VERSION` and sends it
 as `serverInfo.version`, so the value exists on the kit's side.
 
+Since M4 the harness records it when it runs over MCP (`--transport mcp`); over stdio, the reference transport, it
+is still `null`.
+
 **Ask:** add `KitVersion` (string, e.g. `0.3.0`) to the result of `operations` — in `Data` or as a top-level field
 next to `ApiVersion`. That is an additive change for a minor version (see request 1). The harness would then fill
 `kitVersion` from the catalog read it already makes, and the system prompt would name the version.
+
+### 3. MCP server: `apply` and `approved` can collide with a parameter name
+
+`api\Start-KitMcpServer.ps1` reads the tool arguments `apply` and `approved` with PowerShell's `-eq`, which ignores
+case. A step or command parameter called `Apply` or `Approved` would be taken as the flag instead of being passed
+on. No operation of the 0.3.0 catalog has
+such a parameter today, so nothing is wrong yet.
+
+**Ask:** refuse such a parameter name when the catalog is built (or name the flags so they cannot collide, e.g.
+`_apply`), so the collision cannot appear silently with a new step. The harness refuses these names on its side
+anyway.
 
 ## Done
 
