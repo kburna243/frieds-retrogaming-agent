@@ -51,8 +51,8 @@ export function Roadmap() {
     {
       id: "HAL",
       title: "Hardware Layer",
-      textDe: "Über Wiimotes hinaus: Direkte Treiberprofile für Sinden, Gun4IR und AimTrak.",
-      textEn: "Beyond Wiimotes: Dedicated driver profiles for Sinden, Gun4IR, and AimTrak.",
+      textDe: "USB-Lightguns (Sinden, Gun4IR, OpenFIRE, AimTrak, Retro Shooter) sind seit Kit v0.4.0 eingerichtet und geprüft; der nächste Level: Recoil- und Rumble-Profile.",
+      textEn: "USB lightguns (Sinden, Gun4IR, OpenFIRE, AimTrak, Retro Shooter) ship with kit v0.4.0 — setup and checks done; the next stage: recoil and rumble profiles.",
       done: false,
     },
   ];
@@ -68,8 +68,8 @@ export function Roadmap() {
           </>
         }
         sub={t(
-          "Fünf Meilensteine sind bereits vollständig live am Automaten verifiziert. Die nächsten Level sind freigeschaltet.",
-          "Five milestones are fully implemented and verified on the real cabinet. The next stages are unlocked.",
+          "Sechs Meilensteine sind bereits vollständig live am Automaten verifiziert. Der nächste Level ist freigeschaltet.",
+          "Six milestones are fully implemented and verified on the real cabinet. The next stage is unlocked.",
         )}
       />
 

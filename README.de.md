@@ -34,7 +34,7 @@
 > Der Harness läuft an einem echten Windows-Automaten mit Kit v0.4.0 (ApiVersion 1.3), über stdio und über den MCP-Server
 > des Kits, und mit einem lokalen Modell über Ollama. Alle Meilensteine (M1–M6) sind abgeschlossen: Gedächtnis über
 > Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport, `fagent report`, Datenbank-Migrationen,
-> 138 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
+> 155 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
 > messen. Der 12-stufige Smoke-Test lief zu 100% grün auf realer Hardware durch. Siehe [docs/HANDOFF.md](docs/HANDOFF.md),
 > das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
 
@@ -88,7 +88,7 @@ Modell verlässt gar nichts den PC.
 | Bereich | Stand | Was es tut |
 | :--- | :--- | :--- |
 | **Kit-Client** (stdio, ein Prozess, ein JSON-Dokument) | ✅ Am echten Kit geprüft | `Invoke-KitApi.ps1`, strenges `OperationResult`-Parsing, Exit-Codes laut Vertrag |
-| **Tools aus dem Live-Katalog** | ✅ Stabil | 9 feste Tools plus `run_step`; die Stufe read-only bietet nur Lese-Tools |
+| **Tools aus dem Live-Katalog** | ✅ Stabil | 11 feste Tools plus `run_step`; die Stufe read-only bietet nur Lese-Tools |
 | **Policy-Gate** | ✅ Jede Stufe durch einen Test festgenagelt | Stufe → Katalog → Parameter → Dry Run → Plan → Mensch → `-Apply` → Verifikation |
 | **Gedächtnis** (SQLite über `node:sqlite`) | ✅ Stabil | Sitzungen, Nachrichten, Tool-Aufrufe, Pläne, Freigaben, Kit-Ergebnisse, alle mit Zeitstempel |
 | **Gedächtnis wird gelesen** (M1) | 🆕 In 0.2.0 | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
@@ -101,6 +101,7 @@ Modell verlässt gar nichts den PC.
 | **MCP-Transport** (M4) | 🆕 In 0.2.0 · am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
 | **Szenarien** (M5) | 🆕 In 0.2.0 | drei Automaten-Probleme als wiederholbare Evals (`eval/`), gemessen an der Reihenfolge der Kit-Aufrufe |
 | **Berichtsmodus** (M6) | 🆕 In 0.2.0 | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
+| **Contract-Snapshot** (Kit `contract/`) | 🆕 In 0.3.0 | 37 Operationen, festgenagelt an Kit v0.4.0 (ApiVersion 1.3) — die Schritt-15-USB-Lightgun-Route mit Gun4IR, OpenFIRE, AimTrak, Retro Shooter und **Sinden** ging sauber durch die Katalog-Regeln, ohne Harness-Code |
 
 ---
 
@@ -241,6 +242,12 @@ Die Dokumente unter `docs/` sind auf Englisch.
 - **[Node.js](https://nodejs.org/)** bringt SQLite und TypeScript-Unterstützung von Haus aus mit. Deshalb hat dieses
   Repository keine Laufzeit-Abhängigkeiten.
 - **[Vite](https://vite.dev/)** und **[React](https://react.dev/)** bauen die [Website](https://kburna243.github.io/frieds-retrogaming-agent/).
+- **Die USB-Lightgun-Projekte** — Sinden, Gun4IR, OpenFIRE, AimTrak und Retro Shooter. Seit Kit v0.4.0 spricht der
+  Automat alle fünf an; ihre Seiten verlinkt die
+  [Adapter-Tabelle des Kits](https://github.com/kburna243/frieds-retrogaming-kit/blob/main/lightgun/adapters/README.md)
+  einzeln.
+- **[Hook of the Reaper](https://hotr.6bolt.express/)** — die Community, deren Recoil-Haptik den 200-ms-Solenoid-Schutz
+  des Kits geprägt hat.
 
 ---
 

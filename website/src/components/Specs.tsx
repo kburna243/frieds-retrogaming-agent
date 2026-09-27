@@ -54,8 +54,8 @@ export function Specs() {
   ];
 
   const highscore = [
-    { rank: "1ST", name: t("TESTS GRÜN", "TESTS GREEN"), score: "138 / 138", tone: "text-accent" },
-    { rank: "2ND", name: t("KIT-OPERATIONEN", "KIT OPERATIONS"), score: "34", tone: "text-text" },
+    { rank: "1ST", name: t("TESTS GRÜN", "TESTS GREEN"), score: "155 / 155", tone: "text-accent" },
+    { rank: "2ND", name: t("KIT-OPERATIONEN", "KIT OPERATIONS"), score: "37", tone: "text-text" },
     { rank: "3RD", name: t("GATE-STUFEN", "GATE STAGES"), score: "6", tone: "text-text" },
     { rank: "4TH", name: t("RUNTIME-DEPS", "RUNTIME DEPS"), score: "0", tone: "text-primary" },
     { rank: "5TH", name: t("BYPASSES", "BYPASSES"), score: "0", tone: "text-primary" },

@@ -171,7 +171,7 @@ by design:** everything in this repository is testable against `test/kit/`, whic
 
 ```bash
 npm install          # dev deps only: typescript, vitest, @types/node
-npm run check        # typecheck + 138 tests + repo rules — this is the bar
+npm run check        # typecheck + 155 tests + repo rules — this is the bar
 ```
 
 Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
@@ -190,7 +190,7 @@ Rules for the work itself (they are in `CLAUDE.md` / `AGENTS.md` too):
 ```text
 Work in the repository frieds-retrogaming-agent. It is an agent harness that drives a retro arcade cabinet
 through the API of another project (frieds-retrogaming-kit) over JSON-on-stdio. You cannot reach the cabinet
-from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 138 tests
+from here and you do not need to: test/kit/ is a second implementation of the same contract, and all 155 tests
 run against it on any OS.
 
 Before writing any code, read in this order: CLAUDE.md, docs/POLICY.md, docs/ARCHITECTURE.md, docs/HANDOFF.md,
@@ -207,7 +207,7 @@ Non-negotiable, and each one is already enforced by a test:
 7. No runtime npm dependencies. Node 24 only (node:sqlite, type stripping).
 8. No real paths, user names, host names, IPs, tokens or e-mails anywhere in the repository.
 
-Run `npm install && npm run check` first and make sure you see 138 passing and 3 skipped. If anything fails, fix
+Run `npm install && npm run check` first and make sure you see 155 passing and 3 skipped. If anything fails, fix
 that before you start.
 
 Then pick one item from "Until 1.0" in docs/HANDOFF.md. The ones a cloud session can still do are the open ones

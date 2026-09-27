@@ -33,7 +33,7 @@
 > **Status: v0.3.0** ([download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.3.0)).
 > The harness runs on a real Windows cabinet against kit v0.4.0 (ApiVersion 1.3), over stdio and over the kit's MCP server,
 > and with a local model through Ollama. All milestones (M1–M6) are completed: memory across sessions, `npm i -g .`,
-> streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 138 passing tests and three
+> streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 155 passing tests and three
 > repeatable scenarios (`eval/`) that judge a model on the order of its kit calls. The 12-step smoke test passed 12/12
 > on real hardware. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 
@@ -86,7 +86,7 @@ PC at all.
 | Area | Status | What it does |
 | :--- | :--- | :--- |
 | **Kit client** (stdio, one process, one JSON document) | ✅ Verified on a real kit | `Invoke-KitApi.ps1`, strict `OperationResult` parsing, exit codes per contract |
-| **Tools from the live catalog** | ✅ Stable | 9 fixed tools plus `run_step`; read-only level offers reads only |
+| **Tools from the live catalog** | ✅ Stable | 11 fixed tools plus `run_step`; read-only level offers reads only |
 | **Policy gate** | ✅ Every stage pinned by a test | level → catalog → parameters → dry run → plan → human → `-Apply` → verify |
 | **Memory** (SQLite via `node:sqlite`) | ✅ Stable | sessions, messages, tool calls, plans, approvals, kit results, all timestamped |
 | **Memory read back** (M1) | 🆕 In 0.2.0 | a new session starts from a fixed-size digest of the last ones; a remembered yes grants nothing |
@@ -99,6 +99,7 @@ PC at all.
 | **MCP transport** (M4) | 🆕 In 0.2.0 · verified on the cabinet | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
 | **Scenarios** (M5) | 🆕 In 0.2.0 | three cabinet problems as repeatable evals (`eval/`), asserting the order of kit calls |
 | **Report mode** (M6) | 🆕 In 0.2.0 | `fagent report --since 7d` summarizes a period from the audit trail; reads the database only, no kit root needed |
+| **Contract snapshot** (kit `contract/`) | 🆕 In 0.3.0 | 37 operations pinned at kit v0.4.0 (ApiVersion 1.3) — the step 15 USB lightgun route with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and **Sinden** came through the catalog rules clean, no harness code needed |
 
 ---
 
@@ -234,6 +235,11 @@ Got a cabinet running or ran into an edge case? You don't need a GitHub account,
 - **[Node.js](https://nodejs.org/)** brings SQLite and TypeScript support out of the box, which is why this repository
   has no runtime dependencies.
 - **[Vite](https://vite.dev/)** and **[React](https://react.dev/)** build the [website](https://kburna243.github.io/frieds-retrogaming-agent/).
+- **The USB lightgun projects** — Sinden, Gun4IR, OpenFIRE, AimTrak and Retro Shooter. Since kit v0.4.0 the
+  cabinet talks to all five; their home pages are linked one by one in the
+  [kit's adapter table](https://github.com/kburna243/frieds-retrogaming-kit/blob/main/lightgun/adapters/README.md).
+- **[Hook of the Reaper](https://hotr.6bolt.express/)** — the community whose recoil-haptics work shaped the kit's
+  200 ms solenoid guard.
 
 ---
 
