@@ -50,6 +50,16 @@ export function SubpageCards({ onSelectView }: SubpageCardsProps) {
       tone: "accent",
     },
     {
+      id: "feedback",
+      titleDe: "Feedback-Center & Testmatrix",
+      titleEn: "Feedback Center & Test Matrix",
+      descDe: "Erfolgsberichte, Fehler oder Ideen für dein Cabinet einreichen – direkt im Browser, ohne GitHub-Konto.",
+      descEn: "Submit success reports, bugs, or ideas for your cabinet – right in your browser, no GitHub account required.",
+      pose: "happy",
+      tag: "Community",
+      tone: "primary",
+    },
+    {
       id: "mascot",
       titleDe: "Maskottchen-Studio & Brand",
       titleEn: "Mascot Studio & Brand Identity",
@@ -57,7 +67,7 @@ export function SubpageCards({ onSelectView }: SubpageCardsProps) {
       descEn: "Discover Fried's CRT mascot in 9 interactive poses with pose soundboard.",
       pose: "celebrate",
       tag: "Visuals",
-      tone: "primary",
+      tone: "secondary",
     },
     {
       id: "roadmap",
@@ -82,10 +92,10 @@ export function SubpageCards({ onSelectView }: SubpageCardsProps) {
             {t("Fokussierte Unterseiten", "Focused Subpages")}
           </h3>
         </div>
-        <Tag tone="primary">{t("5 Bereiche", "5 Sections")}</Tag>
+        <Tag tone="primary">{t("6 Bereiche", "6 Sections")}</Tag>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {cards.map((c) => (
           <button
             key={c.id}

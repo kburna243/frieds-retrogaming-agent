@@ -16,6 +16,7 @@ import { Specs } from "./components/Specs";
 import { SubpageCards } from "./components/SubpageCards";
 import { SubpageHeader } from "./components/SubpageHeader";
 import { UseCases } from "./components/UseCases";
+import FeedbackCenter from "./feedback/FeedbackCenter";
 import { useReveal } from "./hooks/useReveal";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 
@@ -24,6 +25,7 @@ export type ViewMode =
   | "architecture"
   | "cli"
   | "hardware"
+  | "feedback"
   | "mascot"
   | "roadmap"
   | "all";
@@ -39,6 +41,7 @@ function AppContent() {
           "architecture",
           "cli",
           "hardware",
+          "feedback",
           "mascot",
           "roadmap",
           "all",
@@ -62,12 +65,15 @@ function AppContent() {
           "architecture",
           "cli",
           "hardware",
+          "feedback",
           "mascot",
           "roadmap",
           "all",
         ].includes(hash)
       ) {
         setView(hash as ViewMode);
+      } else if (hash === "feedback") {
+        setView("feedback");
       } else if (hash === "demo") {
         setView("overview");
         setTimeout(() => {
@@ -184,7 +190,25 @@ function AppContent() {
           </div>
         )}
 
-        {/* VIEW 5: MASCOT & BRAND IDENTITY */}
+        {/* VIEW 5: FEEDBACK & TESTMATRIX */}
+        {view === "feedback" && (
+          <div>
+            <SubpageHeader
+              title={t("Feedback-Center & Testmatrix", "Feedback Center & Test Matrix")}
+              category={t("Community & Feedback", "Community & Feedback")}
+              description={t(
+                "Melde Testergebnisse deines Cabinets, melde gefundene Probleme oder schlage Ideen vor – direkt im Browser, ohne GitHub-Konto.",
+                "Report your cabinet test results, submit bugs, or suggest ideas – right in your browser, no GitHub account required.",
+              )}
+              onBack={() => handleSelectView("overview")}
+              onShowAll={handleToggleAll}
+              isAllView={false}
+            />
+            <FeedbackCenter />
+          </div>
+        )}
+
+        {/* VIEW 6: MASCOT & BRAND IDENTITY */}
         {view === "mascot" && (
           <div>
             <SubpageHeader
@@ -202,7 +226,7 @@ function AppContent() {
           </div>
         )}
 
-        {/* VIEW 6: ROADMAP & SPECS */}
+        {/* VIEW 7: ROADMAP & SPECS */}
         {view === "roadmap" && (
           <div>
             <SubpageHeader
@@ -221,7 +245,7 @@ function AppContent() {
           </div>
         )}
 
-        {/* VIEW 7: ALL SECTIONS (CONTINUOUS SCROLL) */}
+        {/* VIEW 8: ALL SECTIONS (CONTINUOUS SCROLL) */}
         {view === "all" && (
           <div>
             <SubpageHeader
@@ -247,6 +271,7 @@ function AppContent() {
             <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-16">
               <HardwareDetails />
             </div>
+            <FeedbackCenter />
             <MascotShowcase />
             <Specs />
             <Roadmap />

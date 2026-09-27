@@ -27,6 +27,7 @@ export function Nav({ currentView = "overview", onSelectView }: NavProps) {
     { id: "demo", href: "#demo", label: t("Policy Gate", "Policy Gate") },
     { id: "cli", href: "#cli", label: "CLI & Docs" },
     { id: "hardware", href: "#hardware", label: t("Hardware", "Hardware") },
+    { id: "feedback", href: "#feedback", label: t("Feedback", "Feedback") },
     { id: "mascot", href: "#mascot", label: t("Maskottchen", "Mascot") },
     { id: "roadmap", href: "#roadmap", label: "Roadmap" },
   ];
