@@ -42,6 +42,8 @@ const FIXED_TOOLS: ReadonlyArray<{ name: string; operation: string; kind: 'Read'
   { name: 'support_bundle', operation: 'support.bundle', kind: 'Change', summary: 'Writes an anonymized support bundle (doctor report, environment, step states, logs).' },
   { name: 'export_profile', operation: 'profile.export', kind: 'Change', summary: 'Cabinet migration: export a cabinet profile (available from kit v0.3; reported NotAvailable before).' },
   { name: 'import_profile', operation: 'profile.import', kind: 'Change', summary: 'Cabinet migration: import a cabinet profile (available from kit v0.3; reported NotAvailable before).' },
+  { name: 'pinbally_detect', operation: 'pinbally.detect', kind: 'Read', summary: 'Describe one PinballY installation: version, systems, table databases and which path references do not resolve on this machine. Reads only, so a copied install shows its dead paths without changing anything.' },
+  { name: 'pinbally_retarget', operation: 'pinbally.retarget', kind: 'Change', summary: 'Give the dead absolute paths of a copied PinballY installation the targets of this machine, following pairs written as Old=New. Only values that do not resolve here and whose new path exists are planned; the plan is shown before anything is written.' },
 ];
 
 /** Catalog type -> JSON schema type. The catalog only ever offers these six (pinned by the kit's contract tests). */

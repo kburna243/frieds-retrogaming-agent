@@ -35,6 +35,10 @@ const readText = (path) => readFileSync(join(root, path), 'utf8');
 
 // Synthetic examples the kit's own allowlist uses too, plus the fake cabinet's invented person.
 const ALLOWLIST = new Set(['contract/catalog-v1.json', 'contract/API.md']);
+// `walk` returns paths joined with the separator of this machine, so on Windows it says `contract\API.md` while the
+// allowlist is written with `/` (and CI runs on Linux). Measured: without this, the exemption for the pinned
+// contract silently never applied on Windows — it only surfaced when a pinned API.md gained an example path.
+const toPosix = (path) => path.split('\\').join('/');
 const SYNTHETIC = [
   'Friedhelm',
   'GAMEMASTER-PC',
@@ -59,7 +63,7 @@ const personal = [
 ];
 
 for (const file of textFiles) {
-  if (ALLOWLIST.has(file)) continue;
+  if (ALLOWLIST.has(toPosix(file))) continue;
   const text = readText(file);
   for (const rule of personal) {
     for (const match of text.matchAll(rule.pattern)) {
@@ -76,7 +80,7 @@ for (const file of textFiles) {
 const SYNTHETIC_ROOTS = ['c:\\retrobat', 'd:\\cabinet', 'd:\\pinball', 'd:\\kit', 'c:\\synthetic', 'c:\\fake-kit', 'c:\\windows', 'c:\\users', 'e:\\old build', 'e:\\pinball'];
 const drivePath = /(?<![A-Za-z0-9])[A-Za-z]:\\{1,2}[A-Za-z0-9._ -]+/g;
 for (const file of textFiles) {
-  if (ALLOWLIST.has(file)) continue;
+  if (ALLOWLIST.has(toPosix(file))) continue;
   for (const match of readText(file).matchAll(drivePath)) {
     const root = match[0].replace(/\\\\/g, '\\').toLowerCase().trimEnd();
     if (SYNTHETIC_ROOTS.some((allowed) => root === allowed || root.startsWith(`${allowed}`))) continue;

@@ -10,7 +10,7 @@
  * looks for (`Friedhelm`, `GAMEMASTER-PC`, `example.test`). No real machine is described here.
  */
 
-export const API_VERSION = '1.1';
+export const API_VERSION = '1.3';
 
 /**
  * The kit's own version, reported since ApiVersion 1.1 in every result (`KitVersion`).
@@ -40,6 +40,33 @@ const REPLACEMENTS = [
 
 /** A synthetic cabinet root, in the style the kit's own allowlist permits (C:\RetroBat, D:\Pinball). */
 export const SYNTH_RETROBAT = 'C:\\RetroBat';
+
+/**
+ * The synthetic PinballY installation this fake cabinet answers for. One folder, two files, four dead path
+ * values — the same situation the kit describes on a real cabinet: an installation copied from another machine.
+ * Everything about it is invented: the install folder under the kit's own example root, the foreign paths under
+ * C:\Synthetic and the fake person's profile. Three of the target folders "exist" here and one does not, so both
+ * a full plan and a plan with something left over (NoTarget) are reachable without a test pretending anything.
+ */
+export const PINBALLY_ROOT = 'D:\\Pinball\\PinballY';
+const PINBALLY_VALUES = [
+  { File: 'Settings.txt', FileKind: 'Settings', Line: 1870, Key: 'System8.Exe', Old: 'C:\\Synthetic\\Pinball Arcade\\TPA.exe' },
+  { File: 'Settings.txt', FileKind: 'Settings', Line: 1881, Key: 'System8.RunBeforePre', Old: 'C:\\Synthetic\\Scripts\\Run_Arcooda.exe' },
+  { File: 'Settings.txt', FileKind: 'Settings', Line: 1913, Key: 'System10.Exe', Old: `${FAKE_PERSON.profile}\\Pinball Arcade\\TPA.exe` },
+  { File: 'PINemHi\\pinemhi.ini', FileKind: 'Companion', Line: 5, Key: 'VP', Old: 'C:\\Synthetic\\VPinMame\\nvram\\' },
+];
+/** Folders that exist on this synthetic machine; a pair leading elsewhere is planned but not ready. */
+const PINBALLY_EXISTING = ['D:\\Pinball\\Pinball Arcade', 'D:\\Pinball\\Scripts', 'D:\\Pinball\\VPinMame'];
+/** One relative value: media that was never copied. Never a retarget candidate, so it stays missing forever. */
+const PINBALLY_RELATIVE = [
+  { Line: 1641, Key: 'System1.MediaDir', Value: 'Visual Pinball', Anchor: 'MediaPath', Resolved: 'D:\\Pinball\\PinballY\\Media\\Visual Pinball' },
+];
+/** Two systems of the synthetic installation, in the shape the kit reports them. */
+const PINBALLY_SYSTEMS = [
+  { Number: 1, Enabled: false, Class: 'Visual Pinball', Exe: '[STEAM]', ExeKind: 'token', ExeStatus: 'Token' },
+  { Number: 8, Enabled: true, Class: 'Pinball Arcade', Exe: 'C:\\Synthetic\\Pinball Arcade\\TPA.exe', ExeKind: 'absolute', ExeStatus: 'ForeignDrive' },
+  { Number: 10, Enabled: true, Class: 'Pinball Arcade', Exe: 'C:\\Synthetic\\Scripts\\Run_it.exe', ExeKind: 'absolute', ExeStatus: 'ForeignDrive' },
+];
 
 /** Refused as parameter names in any spelling; the set holds lower-cased names, see `parameterProblems`. */
 const DENIED_PARAMETERS = new Set([
@@ -75,6 +102,10 @@ export function catalog() {
     { Name: 'backup.remove', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Deletes one backup of the kit (nothing else can be deleted).', Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }] },
     { Name: 'backup.export', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: "Copies a backup to a folder and records its SHA-256.", Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }, { Name: 'Destination', Type: 'String', Mandatory: true }] },
     { Name: 'support.bundle', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Writes an anonymized support bundle (doctor, environment, step states, logs).', Parameters: [{ Name: 'Destination', Type: 'String', Mandatory: false }] },
+    // Kit 0.3.x / ApiVersion 1.2 and 1.3: the second pinball front end. A read that describes it and a gated
+    // write that gives a copied installation the paths of this machine.
+    { Name: 'pinbally.detect', Kind: 'Read', Suite: '', Interactive: false, Available: true, Description: 'Inspect a PinballY installation: version, systems, table databases and which path references do not resolve on this machine. Reads only.', Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }] },
+    { Name: 'pinbally.retarget', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Give the dead absolute paths of a PinballY installation the targets of this machine, following pairs written as Old=New (the same folder under another drive is the usual case). Only path values that do not resolve here are planned, and only when the new path exists; comments, [TOKEN] values, relative paths, DefaultSettings.txt and the own copies of the program are never touched. Dry run without -Apply; the plan needs -Approved.', Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }, { Name: 'Map', Type: 'String[]', Mandatory: true }, { Name: 'BackupDir', Type: 'String', Mandatory: false }] },
   ];
   const steps = STEPS.map((step) => ({
     Name: step.name,
@@ -118,6 +149,8 @@ export function defaultState() {
     exportedProfiles: [],
     importedProfiles: [],
     bundle: null,
+    /** PinballY: the values this fake cabinet has already been given new paths for, keyed by setting name. */
+    pinballYFixed: {},
   };
 }
 
@@ -294,6 +327,12 @@ export function handle(request, context = {}) {
       );
     }
 
+    case 'pinbally.detect':
+      return pinballyDetect({ parameters, state, startedAt, anonymize });
+
+    case 'pinbally.retarget':
+      return pinballyRetarget({ parameters, state, apply, approved, startedAt, anonymize });
+
     default:
       break;
   }
@@ -374,6 +413,210 @@ function profileImport({ parameters, state, apply, approved, startedAt, anonymiz
     result({ operation, kind: 'Change', status, applied: apply, message, warnings, errors, approvals, data: { Result: rows }, startedAt }),
     anonymize,
   );
+}
+
+/**
+ * pinbally.detect (ApiVersion 1.2): one read of one folder. The fake answers the picture the kit measures on a
+ * copied installation — absolute values that resolve on the machine the folder came from and not here, one
+ * relative media folder that is really gone, and the tokens PinballY expands itself. Values a previous
+ * `pinbally.retarget` wrote are reported as resolving now: the read is the verification of the write.
+ */
+function pinballyDetect({ parameters, state, startedAt, anonymize }) {
+  const operation = 'pinbally.detect';
+  const path = String(parameters.Path ?? '');
+  if (!isPinballyInstall(path)) return finish(pinballyNoInstall(operation, path, startedAt), anonymize);
+  const fixed = state.pinballYFixed ?? {};
+  const references = PINBALLY_VALUES.map((value) => {
+    const rewritten = fixed[value.Key];
+    return {
+      Line: value.Line,
+      Key: value.Key,
+      Value: typeof rewritten === 'string' ? rewritten : value.Old,
+      Kind: 'absolute',
+      Status: typeof rewritten === 'string' ? 'Present' : 'ForeignDrive',
+      TokenName: '',
+      Anchor: '',
+      Resolved: typeof rewritten === 'string' ? rewritten : '',
+    };
+  });
+  // Relative values are never retarget candidates (the kit plans absolute paths only), so they stay missing
+  // whatever a map says. That is the difference between a wrong path and content that was not copied.
+  const missing = PINBALLY_RELATIVE.map((value) => ({
+    Line: value.Line, Key: value.Key, Value: value.Value, Kind: 'relative', Status: 'Missing',
+    TokenName: '', Anchor: value.Anchor, Resolved: value.Resolved,
+  }));
+  const foreign = references.filter((reference) => reference.Status === 'ForeignDrive');
+  return finish(
+    result({
+      operation,
+      status: 'Ok',
+      message: `PinballY 1.0.0-beta.24: ${PINBALLY_SYSTEMS.length} system(s), ${foreign.length + missing.length} path value(s) do not resolve on this machine`,
+      warnings: [...foreign, ...missing].map((reference) => `${reference.Key}: ${reference.Value}`),
+      data: {
+        Root: path,
+        Version: '1.0.0-beta.24+9367',
+        Encoding: { Name: 'utf-8-bom', CodePage: 65001, BomLength: 3 },
+        SettingsLine: 1944,
+        Setting: 372,
+        System: PINBALLY_SYSTEMS,
+        SystemEnabled: PINBALLY_SYSTEMS.filter((system) => system.Enabled).length,
+        Reference: [...references, ...missing],
+        ReferenceAbsolute: references.length,
+        ReferenceToken: 3,
+        ReferenceMissing: missing,
+        ReferenceForeign: foreign,
+        Database: [{ Name: 'Pinball Arcade', File: 'Databases\\Pinball Arcade\\Pinball Arcade.xml', Games: 120, Readable: true }],
+        Game: 120,
+        Companion: [{ File: `${path}\\PINemHi\\pinemhi.ini`, Lines: 2445, Broken: foreign.filter((reference) => reference.Key === 'VP').length }],
+        Running: [],
+        WriteSafe: true,
+      },
+      startedAt,
+    }),
+    anonymize,
+  );
+}
+
+/**
+ * pinbally.retarget (ApiVersion 1.3): the gate ladder of API.md rule 2, applied to path values instead of a
+ * wizard step. Dry run without -Apply, NeedsUser with -Apply alone, the write only with -Apply -Approved — and a
+ * second run that finds nothing left answers Skipped. Only absolute values that do not resolve here become rows,
+ * a row is Ready only when its target exists here, and values the map does not cover stay Pending Warnings.
+ */
+function pinballyRetarget({ parameters, state, apply, approved, startedAt, anonymize }) {
+  const operation = 'pinbally.retarget';
+  const path = String(parameters.Path ?? '');
+  if (!isPinballyInstall(path)) return finish(pinballyNoInstall(operation, path, startedAt), anonymize);
+  const map = Array.isArray(parameters.Map) ? parameters.Map.map(String) : [String(parameters.Map ?? '')];
+  let pairs;
+  try {
+    pairs = parsePinballyMap(map);
+  } catch (error) {
+    return finish(result({ operation, kind: 'Change', status: 'Failed', message: error.message, errors: [error.message], startedAt }), anonymize);
+  }
+  const fixed = state.pinballYFixed ?? {};
+  const rows = [];
+  for (const value of PINBALLY_VALUES) {
+    if (fixed[value.Key]) continue; // resolves here since a retarget wrote it: not a candidate any more
+    const pair = pairs.find((candidate) => pinballyCovered(value.Old, candidate.Old));
+    const target = pair ? pair.New + value.Old.slice(pair.Old.length) : '';
+    const exists = pair ? pinballyTargetExists(target) : false;
+    rows.push({
+      File: `${path}\\${value.File}`,
+      FileKind: value.FileKind,
+      Line: value.Line,
+      Key: value.Key,
+      Old: value.Old,
+      New: exists ? target : '',
+      Pair: pair ? pair.Text : '',
+      Target: target,
+      Status: !pair ? 'NoMap' : exists ? 'Ready' : 'NoTarget',
+      Reason: !pair
+        ? `No map pair covers "${value.Old}": the line is left as it is.`
+        : !exists
+          ? `"${pinballyBareFolder(target)}" does not exist on this machine: nothing is pointed at it. A folder that is still missing is a hint, not a change.`
+          : '',
+    });
+  }
+  const ready = rows.filter((row) => row.Status === 'Ready');
+  const pending = rows.filter((row) => row.Status !== 'Ready');
+  const files = [...new Set(ready.map((row) => row.File))];
+  const approvals = files.map((file) => {
+    const lines = ready.filter((row) => row.File === file);
+    return `${file.slice(file.lastIndexOf('\\') + 1)}: ${lines.length} line(s) would change their path, for example ${lines[0].Old} -> ${lines[0].New}`;
+  });
+  const warnings = pending.map((row) => row.Reason);
+  const data = { Root: path, Pair: pairs.map((pair) => pair.Text), Plan: rows, Ready: ready, Pending: pending };
+  const refused = result({
+    operation, kind: 'Change', status: 'NeedsUser',
+    message: `${files.length} file(s) would change; -Apply alone is not enough, the plan needs an explicit yes (-Approved).`,
+    warnings, approvals, data: { ...data, Written: [], Backup: '' }, startedAt,
+  });
+  if (ready.length === 0) {
+    return finish(
+      result({
+        operation, kind: 'Change', status: apply ? 'Skipped' : 'WhatIf',
+        message: 'Nothing to retarget: no dead path here is covered by a pair whose target exists.',
+        warnings, data: { ...data, Written: [], Backup: '' }, startedAt,
+      }),
+      anonymize,
+    );
+  }
+  if (!apply) {
+    return finish(
+      result({
+        operation, kind: 'Change', status: 'WhatIf',
+        message: `Retarget plan: ${ready.length} value(s) could be fixed on this machine, ${pending.length} left as they are, in ${files.length} file(s).`,
+        warnings, approvals, data: { ...data, Written: [], Backup: '' }, startedAt,
+      }),
+      anonymize,
+    );
+  }
+  if (!approved) return finish(refused, anonymize);
+  const backupDir = String(parameters.BackupDir ?? 'D:\\Pinball\\backups');
+  const backup = `${backupDir}\\pinbally-retarget_20260101-120000.zip`;
+  state.pinballYFixed = { ...(state.pinballYFixed ?? {}) };
+  for (const row of ready) state.pinballYFixed[row.Key] = row.New;
+  return finish(
+    result({
+      operation, kind: 'Change', status: 'Done', applied: true,
+      message: `Retargeted ${ready.length} value(s) in ${files.length} file(s); backup: ${backup.slice(backup.lastIndexOf('\\') + 1)}`,
+      warnings,
+      changes: ready.map((row) => ({ Kind: 'File', Target: row.File, Detail: `line ${row.Line}: ${row.Old} -> ${row.New}` })),
+      backups: [backup],
+      data: { ...data, Written: ready, Backup: backup },
+      startedAt,
+    }),
+    anonymize,
+  );
+}
+
+/** The kit recognises an installation by its two files; the fake recognises exactly one folder. */
+function isPinballyInstall(path) {
+  return path.toLowerCase() === PINBALLY_ROOT.toLowerCase();
+}
+
+function pinballyNoInstall(operation, path, startedAt) {
+  const message = `No PinballY installation in "${path}": PinballY.exe + Settings.txt is missing.`;
+  return result({ operation, kind: operation.endsWith('retarget') ? 'Change' : 'Read', status: 'Failed', message, errors: [message], startedAt });
+}
+
+/** `Old=New` pairs, longest first: the same ordering rule the kit uses, so a specific pair wins over a general one. */
+function parsePinballyMap(map) {
+  const pairs = [];
+  for (const entry of map) {
+    const at = entry.indexOf('=');
+    const old = at < 0 ? '' : entry.slice(0, at).trim();
+    const next = at < 0 ? '' : entry.slice(at + 1).trim();
+    // A whole drive is a legal side of a pair (`C:=D:`), because a copied cabinet usually keeps its folder names.
+    const absolute = (value) => /^[A-Za-z]:\\/.test(value) || /^[A-Za-z]:$/.test(value);
+    if (!absolute(old) || !absolute(next)) {
+      throw new Error(`Not a pair of two absolute paths written as Old=New: ${entry}`);
+    }
+    pairs.push({ Old: old.replace(/\\+$/, ''), New: next.replace(/\\+$/, ''), Text: entry });
+  }
+  if (pairs.length === 0) throw new Error('No usable map pair: pinbally.retarget needs at least one pair written as Old=New.');
+  return pairs.sort((a, b) => b.Old.length - a.Old.length);
+}
+
+/** A pair covers a value only at a path boundary: …\Scripts never rewrites …\ScriptsOld\tool.exe. */
+function pinballyCovered(value, old) {
+  const text = value.replace(/\\+$/, '');
+  if (text.toLowerCase() === old.toLowerCase()) return true;
+  return text.toLowerCase().startsWith(`${old.toLowerCase()}\\`);
+}
+
+function pinballyBareFolder(target) {
+  const trimmed = target.replace(/\\+$/, '');
+  return /\.(exe|dll|ini|txt)$/i.test(trimmed) ? trimmed.slice(0, trimmed.lastIndexOf('\\')) : trimmed;
+}
+
+function pinballyTargetExists(target) {
+  const folder = pinballyBareFolder(target).toLowerCase();
+  return PINBALLY_EXISTING.some((existing) => {
+    const root = existing.toLowerCase();
+    return root === folder || root.startsWith(`${folder}\\`) || folder.startsWith(`${root}\\`);
+  });
 }
 
 function stepOperation(name, { state, apply, approved, startedAt, anonymize, parameters = {} }) {
