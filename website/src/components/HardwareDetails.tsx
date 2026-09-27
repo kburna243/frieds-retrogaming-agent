@@ -38,6 +38,22 @@ export function HardwareDetails() {
         t("ViGEmBus Treiberstatus & Autostart", "ViGEmBus driver health & autostart"),
       ],
     },
+    {
+      title: "Arcade & Racing (Wheels, Sticks & Gamepads)",
+      descDe: "Volle Kontrolle für Arcade-Fighter, Racing-Simulationen und Mehrspieler-Konsolen.",
+      descEn: "Full control for arcade fighters, racing sims and multi-player console gaming.",
+      specs: [
+        { label: "Racing Wheels", val: "Logitech G25-G923, Thrustmaster, Fanatec" },
+        { label: "Arcade Sticks", val: "Brook UFB, GP2040-CE, Ultimarc I-PAC, Hori" },
+        { label: "Gamepads", val: "Xbox, DualShock 4 / DualSense, Switch Pro, 8BitDo" },
+        { label: "Emulatoren", val: "MAME, Supermodel (Model 3), Model 2, RetroBat" },
+      ],
+      checks: [
+        t("Automatische VID:PID HID-Erkennung", "Automatic VID:PID HID detection"),
+        t("Steam-Controller-Blacklist Guard", "Steam controller blacklist guard"),
+        t("Multi-Controller retrobat.ini Mapping", "Multi-controller retrobat.ini mapping"),
+      ],
+    },
   ];
 
   const liveReportFindings = [
