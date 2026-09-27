@@ -41,6 +41,14 @@ export const KIND_LABEL: Record<ReportKind, string> = {
   security: "Sicherheitsproblem",
 };
 
+export const KIND_LABEL_EN: Record<ReportKind, string> = {
+  compat: "Compatibility Report",
+  bug: "Bug / Issue",
+  idea: "Idea / Feature",
+  question: "Question",
+  security: "Security Issue",
+};
+
 export const KIND_SHORT: Record<ReportKind, string> = {
   compat: "Report",
   bug: "Bug",
@@ -56,6 +64,13 @@ export const OUTCOME_LABEL: Record<Outcome, string> = {
   untested: "noch nicht getestet",
 };
 
+export const OUTCOME_LABEL_EN: Record<Outcome, string> = {
+  works: "works",
+  partial: "works partially",
+  broken: "does not work",
+  untested: "not yet tested",
+};
+
 export const CABINET_LABEL: Record<Cabinet, string> = {
   "": "–",
   pinball: "Virtual Pinball",
@@ -64,8 +79,22 @@ export const CABINET_LABEL: Record<Cabinet, string> = {
   other: "Anderes / Test-Setup",
 };
 
+export const CABINET_LABEL_EN: Record<Cabinet, string> = {
+  "": "–",
+  pinball: "Virtual Pinball",
+  lightgun: "Lightgun / Arcade",
+  both: "Pinball + Lightgun",
+  other: "Other / Test Setup",
+};
+
 export const TRANSPORT_LABEL: Record<Transport, string> = {
   unknown: "weiß nicht",
+  stdio: "stdio (Invoke-KitApi.ps1)",
+  mcp: "MCP (Start-KitMcpServer.ps1)",
+};
+
+export const TRANSPORT_LABEL_EN: Record<Transport, string> = {
+  unknown: "don't know",
   stdio: "stdio (Invoke-KitApi.ps1)",
   mcp: "MCP (Start-KitMcpServer.ps1)",
 };

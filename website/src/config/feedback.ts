@@ -98,7 +98,9 @@ import type { ReportDraft } from "../lib/report";
 export interface WantedSystem {
   id: string;
   title: string;
+  titleEn?: string;
   why: string;
+  whyEn?: string;
   tag: string;
   prefill: Partial<ReportDraft>;
 }
@@ -107,14 +109,18 @@ export const wantedSystems: WantedSystem[] = [
   {
     id: "win10",
     title: "Windows 10 + PowerShell 5.1",
+    titleEn: "Windows 10 + PowerShell 5.1",
     why: "Der Kit-Kern läuft auf PS 5.1 – getestet wird fast nur auf Windows 11.",
+    whyEn: "Kit core runs on PS 5.1 – real cabinets mostly tested on Windows 11.",
     tag: "OS",
     prefill: { cabinet: "both", os: "Windows 10" },
   },
   {
     id: "sinden-lightgun",
     title: "Sinden Lightgun (im Feinschliff)",
+    titleEn: "Sinden Lightgun (Finalizing)",
     why: "Wird aktuell finalisiert – Kalibrierung, weißer Rand & Recoil-Profile im Test.",
+    whyEn: "Currently being finalized – camera tracking, white border & recoil profiles.",
     tag: "Lightgun",
     prefill: {
       cabinet: "lightgun",
@@ -125,50 +131,64 @@ export const wantedSystems: WantedSystem[] = [
   {
     id: "fp-bam",
     title: "Future Pinball + BAM",
+    titleEn: "Future Pinball + BAM",
     why: "Screen-Geometrie und Backglass jenseits von VPX.",
+    whyEn: "Screen geometry and backglass beyond standard VPX.",
     tag: "Pinball",
     prefill: { cabinet: "pinball", pinball: ["Future Pinball"] },
   },
   {
     id: "pinup",
     title: "PinUP Popper (neueste Version)",
+    titleEn: "PinUP Popper (Latest)",
     why: "Schema-Änderungen an der Popper-SQLite-DB.",
+    whyEn: "Schema changes and SQLite DB migration verification.",
     tag: "Pinball",
     prefill: { cabinet: "pinball", pinball: ["Visual Pinball X", "PinUP Popper"] },
   },
   {
     id: "teknoparrot",
     title: "TeknoParrot aktuell + DemulShooter",
+    titleEn: "TeknoParrot + DemulShooter",
     why: "Die XML-Profile ändern sich mit jedem Release.",
+    whyEn: "Arcade shooter XML profiles change across game releases.",
     tag: "Lightgun",
     prefill: { cabinet: "lightgun", frontends: ["TeknoParrot", "DemulShooter"] },
   },
   {
     id: "models",
     title: "Andere Ollama-Modelle (Llama 3, Mistral, 7B+)",
+    titleEn: "Other Ollama Models (Llama 3, Mistral, 7B+)",
     why: "Tool-Call-Qualität außerhalb von Qwen 2.5.",
+    whyEn: "Tool calling accuracy outside recommended Qwen 2.5.",
     tag: "LLM",
     prefill: { model: "Ollama · llama3", command: "fagent chat --model …" },
   },
   {
     id: "mcp",
     title: "MCP-Transport auf fremder Hardware",
+    titleEn: "MCP Transport on Remote Hardware",
     why: "--transport mcp gegen Kit ≥ 0.3.0 auf anderen Rechnern.",
+    whyEn: "--transport mcp against Kit >= 0.3.0 on external machines.",
     tag: "Transport",
     prefill: { transport: "mcp", command: "fagent doctor --transport mcp" },
   },
   {
     id: "unix",
     title: "Linux / macOS mit Fake-Cabinet",
+    titleEn: "Linux / macOS Fake Cabinet",
     why: "node:sqlite & Type-Stripping auf Node 24 außerhalb der CI.",
+    whyEn: "node:sqlite & type stripping on Node 24 outside CI.",
     tag: "Dev",
     prefill: { cabinet: "other", os: "Linux (Fake-Cabinet)", model: "Kein Modell (nur CLI / --demo)" },
   },
   {
-    id: "guns",
-    title: "Sinden · Gun4IR · AimTrak",
-    why: "Hardware-Fakten für die geplante Abstraktionsschicht (Roadmap).",
-    tag: "Roadmap",
-    prefill: { kind: "idea", cabinet: "lightgun", lightgun: ["Sinden"] },
+    id: "diy-guns",
+    title: "Gun4IR · AimTrak (DIY-Lightguns)",
+    titleEn: "Gun4IR · AimTrak (DIY Lightguns)",
+    why: "Hardware-Fakten für alternative Infrarot- und LED-Systeme gesucht.",
+    whyEn: "Hardware facts for infrared and LED arcade lightgun systems.",
+    tag: "Hardware",
+    prefill: { kind: "idea", cabinet: "lightgun", lightgun: ["Gun4IR"] },
   },
 ];

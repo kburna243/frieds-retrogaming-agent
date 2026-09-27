@@ -67,9 +67,9 @@ export function Footer() {
       <div className="border-t border-border bg-surface/60">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-5 py-6 sm:flex-row sm:px-8">
           <div className="flex items-center gap-3">
-            <span className="relative grid h-8 w-8 place-items-center rounded-lg bg-primary text-bg">
-              <Icon.Gamepad className="h-4 w-4" />
-              <Icon.Crown className="absolute -top-1.5 -right-1 h-3 w-3 text-accent" />
+            <span className="relative grid h-9 w-9 place-items-center rounded-xl border border-primary/40 bg-surface shadow-[0_0_15px_-4px_rgb(0_230_118/0.5)]">
+              <Mascot pose="friendly" size="xs" glow={false} />
+              <Icon.Crown className="absolute -top-1.5 -right-1 h-3.5 w-3.5 rotate-12 text-accent" />
             </span>
             <div className="text-sm">
               <div className="font-semibold">Fried's Retrogaming Agent</div>
