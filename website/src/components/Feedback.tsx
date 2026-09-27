@@ -279,14 +279,14 @@ export function Feedback() {
   return (
     <Section id="feedback" className="bg-surface/30">
       <Heading
-        eyebrow="Player 2 · Community"
+        eyebrow="Player 2 · Blitz-Feedback"
         accent="accent"
         title={
           <>
-            Dein System. Deine Rückmeldung. <span className="text-accent">Kein GitHub nötig.</span>
+            Läuft dein Cabinet? <span className="text-accent">Sag kurz Bescheid.</span>
           </>
         }
-        sub="Ein Kabinett ist kein Testlabor – vieles können wir nicht selbst prüfen. Sag uns in vier Schritten, was auf deinem System passiert. Vorher siehst du exakt, was gesendet wird. Nichts geht ohne dein Okay raus."
+        sub="Kein Konto nötig, kein Entwickler-Wissen, kein Zeitaufwand. Wähle einfach mit 2 Klicks dein Setup aus und sag uns, ob es läuft – jeder Bericht hilft der ganzen Community!"
       />
 
       {/* ---------- Most Wanted ---------- */}
@@ -769,7 +769,7 @@ export function Feedback() {
                             </span>
                             <span>
                               <span className="block text-sm font-semibold">{copied ? "Kopiert ✔" : "Report kopieren"}</span>
-                              <span className="block text-xs text-muted">Zum Einfügen in Forum, Discord oder Mail.</span>
+                              <span className="block text-xs text-muted">In die Zwischenablage kopieren.</span>
                             </span>
                           </button>
                         </div>
