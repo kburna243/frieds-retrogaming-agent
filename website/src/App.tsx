@@ -16,7 +16,7 @@ import { Specs } from "./components/Specs";
 import { SubpageCards } from "./components/SubpageCards";
 import { SubpageHeader } from "./components/SubpageHeader";
 import { UseCases } from "./components/UseCases";
-import FeedbackCenter from "./feedback/FeedbackCenter";
+import { Feedback, FeedbackFab } from "./components/Feedback";
 import { useReveal } from "./hooks/useReveal";
 import { LanguageProvider, useLanguage } from "./i18n/LanguageContext";
 
@@ -193,18 +193,17 @@ function AppContent() {
         {/* VIEW 5: FEEDBACK & TESTMATRIX */}
         {view === "feedback" && (
           <div>
-            <SubpageHeader
-              title={t("Feedback-Center & Testmatrix", "Feedback Center & Test Matrix")}
-              category={t("Community & Feedback", "Community & Feedback")}
-              description={t(
-                "Melde Testergebnisse deines Cabinets, melde gefundene Probleme oder schlage Ideen vor – direkt im Browser, ohne GitHub-Konto.",
-                "Report your cabinet test results, submit bugs, or suggest ideas – right in your browser, no GitHub account required.",
-              )}
-              onBack={() => handleSelectView("overview")}
-              onShowAll={handleToggleAll}
-              isAllView={false}
-            />
-            <FeedbackCenter />
+            <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-8">
+              <button
+                type="button"
+                onClick={() => handleSelectView("overview")}
+                className="group inline-flex items-center gap-2 text-xs font-mono text-muted hover:text-primary transition"
+              >
+                <span className="text-primary group-hover:-translate-x-1 transition-transform">←</span>
+                <span>{t("Zurück zur Übersicht", "Back to Overview")}</span>
+              </button>
+            </div>
+            <Feedback />
           </div>
         )}
 
@@ -271,7 +270,7 @@ function AppContent() {
             <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-16">
               <HardwareDetails />
             </div>
-            <FeedbackCenter />
+            <Feedback />
             <MascotShowcase />
             <Specs />
             <Roadmap />
@@ -280,6 +279,7 @@ function AppContent() {
       </main>
 
       <Footer />
+      <FeedbackFab />
     </div>
   );
 }

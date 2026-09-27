@@ -254,6 +254,55 @@ export const Icon = {
       <path d="M8 18v2h8v-2M9 13v1M15 13v1M10 17h4" />
     </svg>
   ),
+  Mail: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  ),
+  Copy: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+    </svg>
+  ),
+  Send: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z" />
+    </svg>
+  ),
+  Bug: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M8 9V7a4 4 0 0 1 8 0v2M6 13H3M21 13h-3M6 18l-2 2M18 18l2 2M12 11v10" />
+      <rect x="6" y="9" width="12" height="12" rx="6" />
+    </svg>
+  ),
+  Bulb: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1.2 2.1h4.6c.2-.9.6-1.6 1.2-2.1A6 6 0 0 0 12 3Z" />
+    </svg>
+  ),
+  Help: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01" />
+    </svg>
+  ),
+  Flag: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M5 21V4M5 4h11l-2 4 2 4H5" />
+    </svg>
+  ),
+  External: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
+    </svg>
+  ),
+  Alert: ({ className }: { className?: string }) => (
+    <svg className={className} {...iconProps}>
+      <path d="M12 3 2 20h20L12 3ZM12 10v4M12 17h.01" />
+    </svg>
+  ),
 };
 
 /* ---------- Pixel heart / coin decorative ---------- */
