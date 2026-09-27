@@ -112,13 +112,13 @@ export const wantedSystems: WantedSystem[] = [
     prefill: { cabinet: "both", os: "Windows 10" },
   },
   {
-    id: "multi-wiimote",
-    title: "3–4 Wiimotes an einer DolphinBar",
-    why: "Mehrspieler-Erkennung in step.lightgun.01-detect.",
+    id: "sinden-lightgun",
+    title: "Sinden Lightgun (im Feinschliff)",
+    why: "Wird aktuell finalisiert – Kalibrierung, weißer Rand & Recoil-Profile im Test.",
     tag: "Lightgun",
     prefill: {
       cabinet: "lightgun",
-      lightgun: ["Wiimote + DolphinBar"],
+      lightgun: ["Sinden"],
       command: "fagent run step.lightgun.01-detect --level operator",
     },
   },
