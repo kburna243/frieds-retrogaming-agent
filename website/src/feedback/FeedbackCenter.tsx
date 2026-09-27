@@ -435,7 +435,7 @@ export default function FeedbackCenter() {
                           type="email"
                           value={testEmail}
                           onChange={(e) => setTestEmail(e.target.value)}
-                          placeholder="name@beispiel.de"
+                          placeholder="deine-email"
                           autoComplete="email"
                         />
                         <button type="button" className="fb-btn fb-btn-ghost" onClick={handleSaveTestEmail}>
