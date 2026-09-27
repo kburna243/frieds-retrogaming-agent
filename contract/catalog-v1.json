@@ -4,8 +4,8 @@
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
     "branch": "main",
-    "commit": "bd0f47d701a058a4b5c67413d6a6fc274cdd4257",
-    "kitVersion": "0.3.1",
+    "commit": "849548ae814abc40fae5f063e92a797846ca1ecc",
+    "kitVersion": "0.4.0",
     "fetched": "2026-09-27"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
@@ -501,6 +501,36 @@
       "Parameters": [
         {
           "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "step.lightgun.15-adapter",
+      "Kind": "Change",
+      "Suite": "lightgun",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Lightgun step 15: USB lightgun adapters (Gun4IR, OpenFIRE, AimTrak, Retro Shooter, Sinden) as a route",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Install",
+          "Type": "switch",
+          "Mandatory": false
+        },
+        {
+          "Name": "PackagePath",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "SteamConfigVdf",
           "Type": "String",
           "Mandatory": false
         }

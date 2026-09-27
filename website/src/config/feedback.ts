@@ -33,7 +33,7 @@ export const feedbackConfig = {
   securityUrl: "https://github.com/kburna243/frieds-retrogaming-agent/security/advisories/new",
 
   /** Vorbelegung der Versionsfelder. */
-  versions: { fagent: "0.2.0", kit: "0.3.1" },
+  versions: { fagent: "0.3.0", kit: "0.4.0" },
 };
 
 /* ---------- Auswahllisten ---------- */

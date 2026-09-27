@@ -598,10 +598,10 @@ export function Feedback() {
 
                 <div className="grid gap-4 sm:grid-cols-3">
                   <Field label="fagent-Version" hint={<code>fagent --version</code>}>
-                    <input className={cn(inputCls, "font-mono")} value={draft.fagentVersion} onChange={(e) => set("fagentVersion", e.target.value)} placeholder="0.2.0" />
+                    <input className={cn(inputCls, "font-mono")} value={draft.fagentVersion} onChange={(e) => set("fagentVersion", e.target.value)} placeholder="0.3.0" />
                   </Field>
                   <Field label="Kit-Version" hint={<code>fagent doctor</code>}>
-                    <input className={cn(inputCls, "font-mono")} value={draft.kitVersion} onChange={(e) => set("kitVersion", e.target.value)} placeholder="0.3.1" />
+                    <input className={cn(inputCls, "font-mono")} value={draft.kitVersion} onChange={(e) => set("kitVersion", e.target.value)} placeholder="0.4.0" />
                   </Field>
                   <Field label="Node.js" hint={<code>node --version</code>}>
                     <input className={cn(inputCls, "font-mono")} value={draft.nodeVersion} onChange={(e) => set("nodeVersion", e.target.value)} placeholder="v24.x" />

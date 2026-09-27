@@ -9,7 +9,7 @@ without the cabinet.
 | --- | --- |
 | Kit client over stdio (`api\Invoke-KitApi.ps1`, one process, one JSON document) | works, verified on the cabinet |
 | MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and on the cabinet (`doctor`, `status`, a declined change; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1` |
-| Live catalog → tool definitions (11 fixed + `run_step`) | works: 36 operations, 12 tools at `operator`, 6 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
+| Live catalog → tool definitions (11 fixed + `run_step`) | works: 37 operations, 12 tools at `operator`, 6 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test; `fagent run` uses the same gate through `PolicyEngine.runOperation` |
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'`; migrations up to schema version 3, a newer database is refused |
@@ -25,7 +25,7 @@ without the cabinet.
 | Tests | **155 passed**, 3 skipped (the real-model scenarios), 14 files, no network, no Windows, ~4 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 87 files |
-| Pinned contract (`contract/`) | kit commit `bd0f47d7…`, ApiVersion 1.3, 36 operations (`pinbally.detect` read, `pinbally.retarget` change); made by the updater that asks the kit |
+| Pinned contract (`contract/`) | kit commit `849548a…` (kit v0.4.0), ApiVersion 1.3, 37 operations (the step 15 USB lightgun route with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and Sinden came in clean); made by the updater that asks the kit |
 | Website (`website/`) | published to GitHub Pages by `.github/workflows/deploy-pages.yml` |
 
 ## Until 1.0: what is left
@@ -57,6 +57,12 @@ a 1.0 is below, sorted by who can do it. A box is ticked when the thing was meas
   `.github/workflows/release.yml` builds, packs, writes `SHA256SUMS.txt`, installs the tarball and publishes on a
   `v*` tag — refusing a tag that disagrees with `package.json`. Verified here by packing and installing: the
   installed `fagent --version` and `fagent report --json` came out of the tarball, not the checkout.
+- [x] **Contract re-pinned to kit 0.4.0 (2026-09-27).** `tools\Update-ContractSnapshot.ps1` asked the kit at its
+  release commit and rewrote the snapshot: 37 operations, ApiVersion 1.3. The new `step.lightgun.15-adapter`
+  (USB lightguns with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and **Sinden**) is clean against the catalog rules —
+  its `-Devices` is filtered by the API, `StatePath` / `Culture` / `Approved` stay refused — so the harness needed
+  no code change; its tools come from the catalog. The fake cabinet now reports kit 0.4.0, the version the
+  snapshot was taken from. Harness release: 0.3.0.
 
 ### Only a person at the cabinet can do these
 

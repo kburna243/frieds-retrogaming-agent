@@ -1,6 +1,6 @@
 {
   "name": "frieds-retrogaming-agent",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Agent harness for Fried's Retrogaming Kit: plans, remembers and acts on a retro cabinet exclusively through the Kit API (JSON over stdio).",
   "type": "module",
   "license": "MIT",

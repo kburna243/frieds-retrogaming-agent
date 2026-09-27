@@ -3,8 +3,8 @@
   <h1>🤖 Fried's Retrogaming Agent</h1>
   <p><strong>Ein Modell, das deinen Automaten untersucht, und ein Gate, das dafür sorgt, dass du ja sagst</strong></p>
 
-  [![Kit API](https://img.shields.io/badge/Kit%20API-v1.1-ff2d95?style=for-the-badge)](contract/API.md)
-  [![Release](https://img.shields.io/badge/Release-v0.2.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)
+  [![Kit API](https://img.shields.io/badge/Kit%20API-v1.3-ff2d95?style=for-the-badge)](contract/API.md)
+  [![Release](https://img.shields.io/badge/Release-v0.3.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.3.0)
   [![Node](https://img.shields.io/badge/Node-24%2B-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
   [![Laufzeit-Abhängigkeiten](https://img.shields.io/badge/Laufzeit--Abh%C3%A4ngigkeiten-0-3DDC84?style=for-the-badge)](package.json)
   [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow?style=for-the-badge)](LICENSE)
@@ -17,6 +17,7 @@
   <p>
     <a href="README.md"><strong>English</strong></a> •
     <a href="README.de.md"><strong>Deutsch</strong></a> •
+    <a href="https://kburna243.github.io/frieds-retrogaming-agent/#feedback"><strong>Feedback</strong></a> •
     <a href="docs/POLICY.md"><strong>Policy</strong></a> •
     <a href="docs/ARCHITECTURE.md"><strong>Architektur</strong></a> •
     <a href="docs/HANDOFF.md"><strong>Übergabe</strong></a> •
@@ -29,8 +30,8 @@
 ---
 
 > [!NOTE]
-> **Stand: v0.2.0 veröffentlicht** ([Download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.2.0)).
-> Der Harness läuft an einem echten Windows-Automaten mit Kit v0.3.1 (ApiVersion 1.1), über stdio und über den MCP-Server
+> **Stand: v0.3.0** ([Download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.3.0)).
+> Der Harness läuft an einem echten Windows-Automaten mit Kit v0.4.0 (ApiVersion 1.3), über stdio und über den MCP-Server
 > des Kits, und mit einem lokalen Modell über Ollama. Alle Meilensteine (M1–M6) sind abgeschlossen: Gedächtnis über
 > Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport, `fagent report`, Datenbank-Migrationen,
 > 138 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
@@ -193,6 +194,26 @@ Der vollständige Windows-Check, am Automaten:
    den Build scheitern, wenn etwas anderes es versucht.
 6. **Keine persönlichen Daten im Repository.** `tools/check-repo-rules.mjs` prüft in der CI jede Datei; Beispiele
    verwenden `D:\Pinball`, `C:\RetroBat` und den erfundenen Friedhelm.
+
+---
+
+## 💬 Community-Feedback (60 Sekunden · Ohne Hürden)
+
+Läuft dein Automat oder hakt ein Schritt? Du brauchst weder einen GitHub-Account noch Entwickler-Wissen, um zu helfen:
+
+- **[Live Blitz-Feedback-Formular](https://kburna243.github.io/frieds-retrogaming-agent/#feedback)** auf der Website: Wähle mit 2 Klicks dein Setup aus und sag uns kurz, ob es läuft.
+- **Lokale Anonymisierung:** Benutzernamen, Windows-Profilpfade, private IPs, SIDs und Bluetooth-MAC-Adressen werden vor dem Absenden direkt im Browser maskiert.
+- **Null Barrieren:** Direkt absenden, mit 1 Klick den fertigen Report kopieren oder als vorausgefülltes GitHub-Issue öffnen.
+- **★ Most-Wanted-Setups:** Wir suchen aktuell besonders Feedback für:
+  1. *Windows 10 + PowerShell 5.1*
+  2. *Sinden Lightgun* (Kamera-Tracking, weißer Rand, Recoil-Profile im Feinschliff)
+  3. *Future Pinball + BAM*
+  4. *PinUP Popper* (aktuelle Version)
+  5. *TeknoParrot + DemulShooter*
+  6. *Weitere Ollama-Modelle* (Llama 3, Mistral, 7B+)
+  7. *MCP-Transport auf fremder Hardware*
+  8. *Linux / macOS mit Fake-Cabinet*
+  9. *Gun4IR & AimTrak DIY-Lightguns*
 
 ---
 

@@ -3,6 +3,31 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); the version in `VERSION` and `package.json` is the
 harness version, independent of the kit's.
 
+## [0.3.0] - 2026-09-27
+
+The contract re-pinned to kit v0.4.0 — the release in which the cabinet grew the step 15 USB lightgun
+adapters (Gun4IR, OpenFIRE, AimTrak, Retro Shooter and the new **Sinden**) beside the Wiimote route. The harness
+needed no code for it: its tools come from the catalog, and the kit's catalog grew `step.lightgun.15-adapter`
+cleanly against the pinned contract rules.
+
+### Changed
+
+- The pinned contract is kit `849548a` (v0.4.0), 37 operations, ApiVersion 1.3 — regenerated with
+  `tools/Update-ContractSnapshot.ps1`, provenance hash rewritten by the tool.
+- The fake cabinet reports the version the snapshot was taken from: `KIT_VERSION` is `0.4.0`; every operation it
+  offers stays a tested subset of the snapshot.
+
+### Added
+
+- Version 0.3.0 in `VERSION`, `package.json` and the README badges; the Kit API badge reads v1.3.
+- `step.lightgun.15-adapter` passes the catalog rules unchanged: its test-injection parameter `-Devices` is
+  filtered by the API (not a plain type), `StatePath`, `Culture` and `Approved` stay refused names — measured
+  against the live kit on the cabinet.
+- **Community Feedback system**: Interactive Blitz-Feedback form on the project website with 2-click setup selection,
+  full English/German localization, 9 Most-Wanted profiles (including Sinden and Gun4IR/AimTrak), client-side data
+  sanitization, and 1-click GitHub report export.
+- Packaging: `frieds-retrogaming-agent-0.3.0.tgz` npm package tarball with zero runtime dependencies.
+
 ## [0.2.0] - 2026-09-26
 
 The release the roadmap was for: M1 to M6, migrations, the second transport, and the scenarios that measure the

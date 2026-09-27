@@ -3,6 +3,7 @@ node_modules/
 dist/
 coverage/
 *.tsbuildinfo
+*.tgz
 
 # Runtime data — sessions, messages, tool calls, plans and approvals live here and never in the kit
 .harness/
