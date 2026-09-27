@@ -30,7 +30,7 @@ describe('StdioKitTransport against a child process', () => {
     const client = new KitClient(transport());
     const outcome = await client.call({ operation: 'operations', anonymize: true });
     expect(outcome.exitCode).toBe(0);
-    expect(outcome.result.ApiVersion).toBe('1.1');
+    expect(outcome.result.ApiVersion).toBe('1.3');
     // The version of the kit is in the document itself since 1.1, so a stdio call knows it without a handshake.
     expect(outcome.result.KitVersion).toBe('0.3.1');
     expect(client.kitVersion).toBe('0.3.1');

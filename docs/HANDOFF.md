@@ -9,7 +9,7 @@ without the cabinet.
 | --- | --- |
 | Kit client over stdio (`api\Invoke-KitApi.ps1`, one process, one JSON document) | works, verified on the cabinet |
 | MCP transport (M4): the kit's `Start-KitMcpServer.ps1` behind `KitTransport`, `--transport mcp` | works against the fake MCP server and on the cabinet (`doctor`, `status`, a declined change; see [LIVE-RUN-REPORT.md](LIVE-RUN-REPORT.md)). Catalog still via `Invoke-KitApi.ps1` |
-| Live catalog → tool definitions (9 fixed + `run_step`) | works: 34 operations, 10 tools at `operator`, 5 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
+| Live catalog → tool definitions (11 fixed + `run_step`) | works: 36 operations, 12 tools at `operator`, 6 reads at `read-only`; a model reaches only the operations its tools name (`NOT_OFFERED`) |
 | Policy gate: level → catalog → parameters → dry run → plan → human → `-Apply` → verify | works, each stage pinned by a test; `fagent run` uses the same gate through `PolicyEngine.runOperation` |
 | Interactive steps never callable | works, refused before any process starts |
 | SQLite memory (`node:sqlite`, no ORM, no runtime deps) | works; schema CHECKs `decided_by = 'human'`; migrations up to schema version 3, a newer database is refused |
@@ -22,10 +22,10 @@ without the cabinet.
 | One reader on the terminal: chat input and the plan question | works; the chat owns a `Prompter` and hands it to `TerminalHumanGateway`, so no second `readline` opens on one stdin |
 | Packaging (M2): `npm i -g .`, `fagent --version` | works; CI installs it globally on Linux and Windows; a `v*` tag publishes a tarball with `SHA256SUMS.txt` |
 | Fake cabinet (`test/kit/`) — the API contract as a second implementation, with an MCP server | works; every operation it offers has the kind, availability and parameters of the pinned snapshot (tested); its two version sources are one constant |
-| Tests | **138 passed**, 3 skipped (the real-model scenarios), 13 files, no network, no Windows, ~4 s |
+| Tests | **155 passed**, 3 skipped (the real-model scenarios), 14 files, no network, no Windows, ~4 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
-| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 86 files |
-| Pinned contract (`contract/`) | kit 0.3.1, commit `0ab1116d…`, ApiVersion 1.1, 34 operations; made by the updater that asks the kit |
+| Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 87 files |
+| Pinned contract (`contract/`) | kit commit `bd0f47d7…`, ApiVersion 1.3, 36 operations (`pinbally.detect` read, `pinbally.retarget` change); made by the updater that asks the kit |
 | Website (`website/`) | published to GitHub Pages by `.github/workflows/deploy-pages.yml` |
 
 ## Until 1.0: what is left
@@ -99,6 +99,8 @@ Nothing. Kit 0.3.1 shipped all three requests and this repository absorbed them
   `fagent doctor` names the kit over plain stdio too and the harness never reads a kit file to learn it.
 - [#23](https://github.com/kburna243/frieds-retrogaming-kit/issues/23) `Apply` / `Approved` are refused as parameter
   names in any spelling; `schemaForParameters` in this repository refuses to offer them whatever a catalog claims.
+- Kit PR #27 (`pinbally.detect`, API 1.2) and PR #28 (`pinbally.retarget`, API 1.3) were absorbed in kit API 1.3,
+  adding PinballY detection and retargeting with 17 dedicated tests.
 
 The next one to file, from M5: a small local model changes before it measures. The system prompt says to read first
 and the model does not always listen. A harness can refuse that — show a plan only after a read happened in this

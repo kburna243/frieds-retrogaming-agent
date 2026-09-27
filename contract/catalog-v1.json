@@ -1,12 +1,12 @@
 {
-  "ApiVersion": "1.1",
+  "ApiVersion": "1.3",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "origin/main",
-    "commit": "0ab1116d742245270265b6c28eab310e19a75672",
+    "branch": "main",
+    "commit": "bd0f47d701a058a4b5c67413d6a6fc274cdd4257",
     "kitVersion": "0.3.1",
-    "fetched": "2026-09-26"
+    "fetched": "2026-09-27"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
   "Operations": [
@@ -101,7 +101,7 @@
       "Suite": "",
       "Interactive": false,
       "Available": true,
-      "Description": "Detected components: Windows, RetroBat, Gunmote, ViGEmBus, DolphinBar, Steam, pinball build.",
+      "Description": "Detected components: Windows, RetroBat, Gunmote, ViGEmBus, DolphinBar, Steam, pinball build, PinballY.",
       "Parameters": []
     },
     {
@@ -112,6 +112,46 @@
       "Available": true,
       "Description": "This catalog.",
       "Parameters": []
+    },
+    {
+      "Name": "pinbally.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Inspect a PinballY installation: version, systems, table databases and which path references do not resolve on this machine. Reads only.",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "pinbally.retarget",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Give the dead absolute paths of a PinballY installation the targets of this machine, following pairs written as Old=New (the same folder under another drive is the usual case). Only path values that do not resolve here are planned, and only when the new path exists; comments, [TOKEN] values, relative paths, DefaultSettings.txt and the own copies of the program are never touched. Dry run without -Apply; the plan needs -Approved.",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Map",
+          "Type": "String[]",
+          "Mandatory": true
+        },
+        {
+          "Name": "BackupDir",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "profile.export",

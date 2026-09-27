@@ -53,6 +53,8 @@ export declare const API_VERSION: string;
 export declare const KIT_VERSION: string;
 export declare const FAKE_PERSON: { user: string; profile: string; computer: string; sid: string; ip: string; email: string };
 export declare const SYNTH_RETROBAT: string;
+/** The one folder the fake cabinet recognises as a PinballY installation (`pinbally.detect`, `pinbally.retarget`). */
+export declare const PINBALLY_ROOT: string;
 export declare function catalog(): FakeOperationSpec[];
 export declare function defaultState(): Record<string, unknown>;
 export declare function handle(request: FakeRequest, context?: { state?: Record<string, unknown> }): { result: FakeResult; exitCode: number };
