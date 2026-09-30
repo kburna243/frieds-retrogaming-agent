@@ -3,10 +3,10 @@
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "main",
-    "commit": "849548ae814abc40fae5f063e92a797846ca1ecc",
-    "kitVersion": "0.4.0",
-    "fetched": "2026-09-27"
+    "branch": "HEAD",
+    "commit": "3fee3b53b6608d3fb25a57622518620c0fb5a5cd",
+    "kitVersion": "0.4.2",
+    "fetched": "2026-10-01"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
   "Operations": [
@@ -105,6 +105,15 @@
       "Parameters": []
     },
     {
+      "Name": "controllers.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detect all controllers: lightguns, arcade sticks, pads. One result across three packages.",
+      "Parameters": []
+    },
+    {
       "Name": "operations",
       "Kind": "Read",
       "Suite": "",
@@ -112,6 +121,21 @@
       "Available": true,
       "Description": "This catalog.",
       "Parameters": []
+    },
+    {
+      "Name": "outputs.verify_safety",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Verify output safety: solenoid limits, port conflicts, double output consumers.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "pinbally.detect",
