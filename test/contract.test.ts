@@ -43,13 +43,13 @@ describe('the JSON document of the kit', () => {
   it('reads the kit version out of the result, and stays quiet about a kit that has none', () => {
     // ApiVersion 1.1 added KitVersion. An older kit is not a contract violation, it just does not know the field.
     const withVersion = parseKitResult(JSON.stringify(handle({ operation: 'status' }).result));
-    expect(withVersion.KitVersion).toBe('1.3.2');
+    expect(withVersion.KitVersion).toBe('1.4.0');
 
     const before = { ...handle({ operation: 'status' }).result } as Record<string, unknown>;
     delete before.KitVersion;
     const older = parseKitResult(JSON.stringify(before));
     expect(older.KitVersion).toBe('');
-    expect(older.ApiVersion).toBe('1.5');
+    expect(older.ApiVersion).toBe('1.6');
   });
 
   it('never puts -Apply or -Approved where a parameter could sit', () => {
@@ -111,7 +111,7 @@ describe('the catalog, and only the catalog, decides what is a tool', () => {
     // PinballY came with 1.2 and 1.3 and is answered by the fake, so the subset is no longer missing it.
     expect(fakeNames).toContain('pinbally.detect');
     expect(fakeNames).toContain('pinbally.retarget');
-    expect(snapshot.ApiVersion).toBe('1.5');
+    expect(snapshot.ApiVersion).toBe('1.6');
     // The fake answers as the kit version the snapshot was taken from. If this fails, one of the two was edited alone.
     expect((snapshot.Source as { kitVersion: string }).kitVersion).toBe(KIT_VERSION);
   });
