@@ -17,7 +17,7 @@ export const API_VERSION = '1.3';
  * The fake says what the contract snapshot in contract/ was taken from, so a test can see the same number a real
  * cabinet of that kit version would report.
  */
-export const KIT_VERSION = '0.4.0';
+export const KIT_VERSION = '0.4.2';
 
 /** The synthetic "person" behind the fake cabinet. Used only to prove `-Anonymize` works. */
 export const FAKE_PERSON = {

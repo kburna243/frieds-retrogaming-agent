@@ -43,7 +43,7 @@ describe('the JSON document of the kit', () => {
   it('reads the kit version out of the result, and stays quiet about a kit that has none', () => {
     // ApiVersion 1.1 added KitVersion. An older kit is not a contract violation, it just does not know the field.
     const withVersion = parseKitResult(JSON.stringify(handle({ operation: 'status' }).result));
-    expect(withVersion.KitVersion).toBe('0.4.0');
+    expect(withVersion.KitVersion).toBe('0.4.2');
 
     const before = { ...handle({ operation: 'status' }).result } as Record<string, unknown>;
     delete before.KitVersion;
