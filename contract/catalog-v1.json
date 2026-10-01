@@ -1,15 +1,30 @@
 {
-  "ApiVersion": "1.3",
+  "ApiVersion": "1.4",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "HEAD",
-    "commit": "3fee3b53b6608d3fb25a57622518620c0fb5a5cd",
-    "kitVersion": "0.4.2",
+    "branch": "release/1.2.0",
+    "commit": "a17f0167b243064f14f3b7cfb61ac97dadedaa25",
+    "kitVersion": "1.2.0",
     "fetched": "2026-10-01"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
   "Operations": [
+    {
+      "Name": "auto.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Natural language to kit configuration: describe your cabinet, get back modules, setup mode, and preset suggestion. No LLM call -- fast keyword engine.",
+      "Parameters": [
+        {
+          "Name": "Description",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
     {
       "Name": "backup.check",
       "Kind": "Read",
@@ -96,6 +111,46 @@
       ]
     },
     {
+      "Name": "backups.rollback",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Roll back to the last saved rollback point (or a named one). Restores all snapshotted files.",
+      "Parameters": [
+        {
+          "Name": "Name",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "backups.snapshot",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Take a snapshot of specific files for rollback. Push a named rollback point onto the stack.",
+      "Parameters": [
+        {
+          "Name": "Name",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Paths",
+          "Type": "String[]",
+          "Mandatory": true
+        },
+        {
+          "Name": "Description",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
       "Name": "components",
       "Kind": "Read",
       "Suite": "",
@@ -114,6 +169,439 @@
       "Parameters": []
     },
     {
+      "Name": "displays.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detect all displays: monitors (EDID), virtual DMD, backglass, topper.",
+      "Parameters": []
+    },
+    {
+      "Name": "emulators.apply_shader_preset",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Apply a CRT/retro shader preset to an emulator (none, crt-lottes, crt-royale, hsm-mega-bezel, lcd-grid, scanlines).",
+      "Parameters": [
+        {
+          "Name": "Emulator",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Preset",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "emulators.configure",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Configure an emulator with best-practice settings.",
+      "Parameters": [
+        {
+          "Name": "Emulator",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "emulators.detect_installed",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detect all installed emulators: MAME, RetroArch, TeknoParrot, Supermodel, Model2, Cemu, Dolphin, RPCS3, Xemu, DuckStation, PCSX2.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "emulators.install",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Install an emulator (manual: kit provides official links, user supplies package).",
+      "Parameters": [
+        {
+          "Name": "Emulator",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "PackagePath",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "emulators.patch",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Apply community-curated patches to an emulator (compatibility, performance, fixes).",
+      "Parameters": [
+        {
+          "Name": "Emulator",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "PatchName",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "emulators.verify_integrity",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Verify emulator installation integrity: executable present, configs valid, checksums match.",
+      "Parameters": [
+        {
+          "Name": "Emulator",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "enhancements.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detect all enhancements: GPU, shader presets, latency, upscaling, frame pacing, pinball visuals, ambient lighting, audio.",
+      "Parameters": []
+    },
+    {
+      "Name": "frontends.configure_genre_routing",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Configure which emulator launches which system in a frontend.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "frontends.detect",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Detect all installed frontends: RetroBat, PinballY, Playnite, LaunchBox, PinUP.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "frontends.export_catalog",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Export the unified catalog to a frontend-specific format.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Destination",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "frontends.import_library",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Import a frontend library into the unified JSON catalog format.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "frontends.install",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Install a frontend (manual: kit provides official links, user supplies package).",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "PackagePath",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "frontends.set_theme",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Set the theme for a frontend.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "ThemeName",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "library.add_roms",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Add ROMs to a frontend library.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "System",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Paths",
+          "Type": "String[]",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "library.create_playlist",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Create a playlist in a frontend library.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Name",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Roms",
+          "Type": "String[]",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "library.export_catalog",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Export the unified JSON catalog to file.",
+      "Parameters": [
+        {
+          "Name": "Destination",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "library.remove_roms",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Remove ROMs from a frontend library.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "System",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "Names",
+          "Type": "String[]",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
+      "Name": "library.scan",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Scan all frontend libraries for ROMs, media, and metadata. Returns unified JSON catalog.",
+      "Parameters": [
+        {
+          "Name": "Path",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "library.update_media",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Update media (covers, videos, wheels) for ROMs in a frontend library.",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "System",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "MediaType",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "library.validate_integrity",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Validate ROM integrity (checksums, missing files, broken references).",
+      "Parameters": [
+        {
+          "Name": "Frontend",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "System",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
       "Name": "operations",
       "Kind": "Read",
       "Suite": "",
@@ -129,6 +617,21 @@
       "Interactive": false,
       "Available": true,
       "Description": "Verify output safety: solenoid limits, port conflicts, double output consumers.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "outputs.wiimote_hook",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Inspect the Wiimote lightgun output chain: DolphinBar detection, Gunmote status, recoil relay, rumble safety thresholds, double-consumer warnings.",
       "Parameters": [
         {
           "Name": "RetroBatRoot",
@@ -172,6 +675,41 @@
         },
         {
           "Name": "BackupDir",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "presets.apply",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Apply a named preset: sets setup mode, target module, and values.",
+      "Parameters": [
+        {
+          "Name": "Name",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "presets.list",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "List all available configuration presets (built-in + user).",
+      "Parameters": [
+        {
+          "Name": "Module",
           "Type": "String",
           "Mandatory": false
         }
@@ -273,6 +811,21 @@
       ]
     },
     {
+      "Name": "setup.set_mode",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Set the setup level: Easy (autopilot), Custom (assistant), or NerdExtreme (deep dive).",
+      "Parameters": [
+        {
+          "Name": "Mode",
+          "Type": "String",
+          "Mandatory": true
+        }
+      ]
+    },
+    {
       "Name": "status",
       "Kind": "Read",
       "Suite": "",
@@ -280,6 +833,31 @@
       "Available": true,
       "Description": "Health check of system, pinball, lightgun and security (doctor).",
       "Parameters": []
+    },
+    {
+      "Name": "status.health",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Fast-path system health (under 2s): USB hardware matrix, storage reachability, interference processes, vitals (uptime/memory/disk/cpu). Returns OK or Degraded.",
+      "Parameters": [
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "ExtraStoragePaths",
+          "Type": "String[]",
+          "Mandatory": false
+        },
+        {
+          "Name": "ExtraBadProcesses",
+          "Type": "String[]",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "step.lightgun.01-detect",

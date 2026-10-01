@@ -116,7 +116,7 @@ describe('MCP transport against the fake server process', () => {
     const s = setup();
     await s.transport.connect();
     expect(s.transport.protocolVersion).toBe('2025-06-18');
-    expect(s.transport.kitVersion).toBe('0.4.2');
+    expect(s.transport.kitVersion).toBe('1.2.0');
     expect(s.transport.toolNames.has('status')).toBe(true);
     expect(s.transport.toolNames.has('operations')).toBe(false);
     // Interactive steps are not offered by the server either.
@@ -207,9 +207,9 @@ describe('harness with the MCP transport', () => {
     const harness = await createHarness(config, { transport: s.transport, gateway: new ScriptedModelGateway() });
     // Since ApiVersion 1.1 the kit names its version inside every result, so the MCP path and the plain stdio path
     // report the same number. The fake keeps both from one constant, so this cannot pass by accident.
-    expect(harness.kitVersion).toBe('0.4.2');
+    expect(harness.kitVersion).toBe('1.2.0');
     const session = harness.store.recentSessions(1)[0];
-    expect(session?.kit_version).toBe('0.4.2');
+    expect(session?.kit_version).toBe('1.2.0');
     expect(session?.transport).toBe('mcp-stdio');
     harness.store.close();
   });
