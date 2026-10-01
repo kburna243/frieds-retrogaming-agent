@@ -1,11 +1,11 @@
 {
-  "ApiVersion": "1.4",
+  "ApiVersion": "1.5",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "release/1.2.0",
-    "commit": "a17f0167b243064f14f3b7cfb61ac97dadedaa25",
-    "kitVersion": "1.2.0",
+    "branch": "tag v1.3.2",
+    "commit": "5eaa6e3fe764c95a04b5485a46f48b91b2d808b1",
+    "kitVersion": "1.3.2",
     "fetched": "2026-10-01"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
@@ -167,6 +167,46 @@
       "Available": true,
       "Description": "Detect all controllers: lightguns, arcade sticks, pads. One result across three packages.",
       "Parameters": []
+    },
+    {
+      "Name": "controllers.input_apply",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Write an input profile as a MAME ctrlr file of its own (never a hand-made one); the plan names the RetroBat settings that load it.",
+      "Parameters": [
+        {
+          "Name": "Profile",
+          "Type": "String",
+          "Mandatory": true
+        },
+        {
+          "Name": "CtrlrName",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "controllers.input_profiles",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "List the input profiles (one button layout for the whole cabinet), or one profile with its mapping.",
+      "Parameters": [
+        {
+          "Name": "Name",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "displays.detect",
