@@ -3,6 +3,16 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); the version in `VERSION` and `package.json` is the
 harness version, independent of the kit's.
 
+## [0.4.0] - 2026-10-02
+
+The contract re-pinned to kit v1.4.0.
+
+### Changed
+
+- The pinned contract is kit `5d14432` (v1.4.0), 73 operations, ApiVersion 1.6 — taken from the kit's tag v1.4.0.
+  Includes three new read/change operations (`controllers.xinput_slots`, `controllers.wiimote_order`, `controllers.wiimote_bind`).
+- The fake cabinet answers as 1.4.0 / API 1.6. Test-ContractDrift: snapshot matches the live catalog.
+
 ## [0.3.0] - 2026-09-27
 
 The contract re-pinned to kit v0.4.0 — the release in which the cabinet grew the step 15 USB lightgun
