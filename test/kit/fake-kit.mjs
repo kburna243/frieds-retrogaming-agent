@@ -10,7 +10,7 @@
  * looks for (`Friedhelm`, `GAMEMASTER-PC`, `example.test`). No real machine is described here.
  */
 
-export const API_VERSION = '1.6';
+export const API_VERSION = '1.7';
 
 /**
  * The kit's own version, reported since ApiVersion 1.1 in every result (`KitVersion`).

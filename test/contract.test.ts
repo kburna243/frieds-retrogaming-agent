@@ -49,7 +49,7 @@ describe('the JSON document of the kit', () => {
     delete before.KitVersion;
     const older = parseKitResult(JSON.stringify(before));
     expect(older.KitVersion).toBe('');
-    expect(older.ApiVersion).toBe('1.6');
+    expect(older.ApiVersion).toBe('1.7');
   });
 
   it('never puts -Apply or -Approved where a parameter could sit', () => {
@@ -111,7 +111,7 @@ describe('the catalog, and only the catalog, decides what is a tool', () => {
     // PinballY came with 1.2 and 1.3 and is answered by the fake, so the subset is no longer missing it.
     expect(fakeNames).toContain('pinbally.detect');
     expect(fakeNames).toContain('pinbally.retarget');
-    expect(snapshot.ApiVersion).toBe('1.6');
+    expect(snapshot.ApiVersion).toBe('1.7');
     // The fake answers as the kit version the snapshot was taken from. If this fails, one of the two was edited alone.
     expect((snapshot.Source as { kitVersion: string }).kitVersion).toBe(KIT_VERSION);
   });

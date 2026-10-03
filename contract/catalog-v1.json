@@ -1,12 +1,12 @@
 {
-  "ApiVersion": "1.6",
+  "ApiVersion": "1.7",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "tag v1.4.0",
-    "commit": "5d144327db333b014cf19bd7c7917fc92851497c",
+    "branch": "origin/main",
+    "commit": "44d7a6b15af748757f44dea4bed9cf7b72cfe60a",
     "kitVersion": "1.4.0",
-    "fetched": "2026-10-02"
+    "fetched": "2026-10-03"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
   "Operations": [
@@ -708,6 +708,46 @@
       ]
     },
     {
+      "Name": "pinball.dmd_audit",
+      "Kind": "Read",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Check every table section of VPinMAME's DmdDevice.ini that moves the virtual DMD to a strip or switches it off: does the table really load a PuP pack? Reads the table scripts out of the .vpx files (read only) and the PUPVideos folder names. Verdicts: Ok, NoPup, Mixed, Orphan, Unclear. Root defaults to the build root of the pinball setup.",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
+      "Name": "pinball.dmd_repair",
+      "Kind": "Change",
+      "Suite": "",
+      "Interactive": false,
+      "Available": true,
+      "Description": "Remove the virtualdmd lines of the table sections the audit calls NoPup (a strip or DMD-off without an active PuP pack leaves the front end's video on screen). Never touches Ok, Mixed, Orphan or Unclear sections; Section limits the repair to named sections. Dry run without -Apply; the plan needs -Approved; ZIP backup before the write.",
+      "Parameters": [
+        {
+          "Name": "Root",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Section",
+          "Type": "String[]",
+          "Mandatory": false
+        },
+        {
+          "Name": "BackupDir",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
+    },
+    {
       "Name": "pinbally.detect",
       "Kind": "Read",
       "Suite": "",
@@ -1022,6 +1062,11 @@
           "Name": "Mode",
           "Type": "String",
           "Mandatory": false
+        },
+        {
+          "Name": "Connection",
+          "Type": "String",
+          "Mandatory": false
         }
       ]
     },
@@ -1050,6 +1095,11 @@
       "Parameters": [
         {
           "Name": "RetroBatRoot",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "Connection",
           "Type": "String",
           "Mandatory": false
         }
