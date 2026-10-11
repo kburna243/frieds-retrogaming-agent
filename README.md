@@ -4,7 +4,7 @@
   <p><strong>A model that diagnoses your cabinet, and a gate that makes sure you are the one who says yes</strong></p>
 
   [![Kit API](https://img.shields.io/badge/Kit%20API-v1.6-ff2d95?style=for-the-badge)](contract/API.md)
-  [![Release](https://img.shields.io/badge/Release-v0.4.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.4.0)
+  [![Release](https://img.shields.io/badge/Release-v0.5.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.5.0)
   [![Node](https://img.shields.io/badge/Node-24%2B-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
   [![Runtime deps](https://img.shields.io/badge/Runtime%20deps-0-3DDC84?style=for-the-badge)](package.json)
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
@@ -30,10 +30,12 @@
 ---
 
 > [!NOTE]
-> **Status: v0.4.0** ([download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.4.0)).
-> The harness runs on a real Windows cabinet against kit v1.4.0 (ApiVersion 1.6), over stdio and over the kit's MCP server,
+> **Status: v0.5.0** ([download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.5.0)).
+> New in 0.5: the contract is pinned to kit v1.5.0 (ApiVersion 1.8) with the tools `wiimote_order` and `wiimote_bind`; an
+> apply carries the kit's `PlanId` from the dry run, so the kit writes only the plan you approved.
+> The harness ran on a real Windows cabinet against kit v1.4.0 (ApiVersion 1.6), over stdio and over the kit's MCP server,
 > and with a local model through Ollama. All milestones (M1–M6) are completed: memory across sessions, `npm i -g .`,
-> streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 155 passing tests and three
+> streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 161 passing tests and three
 > repeatable scenarios (`eval/`) that judge a model on the order of its kit calls. The 12-step smoke test passed 12/12
 > on real hardware. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
 

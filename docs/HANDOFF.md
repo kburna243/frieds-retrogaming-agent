@@ -25,7 +25,7 @@ without the cabinet.
 | Tests | **155 passed**, 3 skipped (the real-model scenarios), 14 files, no network, no Windows, ~4 s |
 | Typecheck (`tsc --noEmit`, strict) and build to `dist/` | clean |
 | Repo rule checker (personal data incl. non-synthetic drive roots, contract hash, no scripted approval, `.ps1` BOM, version parity) | green, 87 files |
-| Pinned contract (`contract/`) | kit commit `849548a…` (kit v0.4.0), ApiVersion 1.3, 37 operations (the step 15 USB lightgun route with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and Sinden came in clean); made by the updater that asks the kit |
+| Pinned contract (`contract/`) | kit main (kit v1.5.0), ApiVersion 1.8, 75 operations, including `controllers.wiimote_bind` with `Binding` and `PlanId`; made by the updater that asks the kit |
 | Website (`website/`) | published to GitHub Pages by `.github/workflows/deploy-pages.yml` |
 
 ## Until 1.0: what is left
@@ -57,6 +57,9 @@ a 1.0 is below, sorted by who can do it. A box is ticked when the thing was meas
   `.github/workflows/release.yml` builds, packs, writes `SHA256SUMS.txt`, installs the tarball and publishes on a
   `v*` tag — refusing a tag that disagrees with `package.json`. Verified here by packing and installing: the
   installed `fagent --version` and `fagent report --json` came out of the tarball, not the checkout.
+- [x] **Wiimote binding with plan id (2026-10-11, v0.5.0).** Tools `wiimote_order` / `wiimote_bind`; the engine applies a
+  kit plan that names itself (`Data.PlanId`) with exactly that id from its own dry run, refuses any caller `PlanId`,
+  and `NEVER_A_PARAM` keeps it out of every schema. Contract re-pinned to kit v1.5.0 (ApiVersion 1.8).
 - [x] **Contract re-pinned to kit 0.4.0 (2026-09-27).** `tools\Update-ContractSnapshot.ps1` asked the kit at its
   release commit and rewrote the snapshot: 37 operations, ApiVersion 1.3. The new `step.lightgun.15-adapter`
   (USB lightguns with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and **Sinden**) is clean against the catalog rules —

@@ -4,7 +4,7 @@
   <p><strong>Ein Modell, das deinen Automaten untersucht, und ein Gate, das dafür sorgt, dass du ja sagst</strong></p>
 
   [![Kit API](https://img.shields.io/badge/Kit%20API-v1.6-ff2d95?style=for-the-badge)](contract/API.md)
-  [![Release](https://img.shields.io/badge/Release-v0.4.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.4.0)
+  [![Release](https://img.shields.io/badge/Release-v0.5.0-00f0ff?style=for-the-badge&logo=github)](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.5.0)
   [![Node](https://img.shields.io/badge/Node-24%2B-5FA04E?style=for-the-badge&logo=nodedotjs&logoColor=white)](package.json)
   [![Laufzeit-Abhängigkeiten](https://img.shields.io/badge/Laufzeit--Abh%C3%A4ngigkeiten-0-3DDC84?style=for-the-badge)](package.json)
   [![Lizenz: MIT](https://img.shields.io/badge/Lizenz-MIT-yellow?style=for-the-badge)](LICENSE)
@@ -30,11 +30,13 @@
 ---
 
 > [!NOTE]
-> **Stand: v0.4.0** ([Download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.4.0)).
-> Der Harness läuft an einem echten Windows-Automaten mit Kit v1.4.0 (ApiVersion 1.6), über stdio und über den MCP-Server
+> **Stand: v0.5.0** ([Download](https://github.com/kburna243/frieds-retrogaming-agent/releases/tag/v0.5.0)).
+> Neu in 0.5: Der Vertrag ist auf Kit v1.5.0 (ApiVersion 1.8) festgelegt, mit den Tools `wiimote_order` und `wiimote_bind`;
+> ein Apply trägt die `PlanId` des Kits aus dem Probelauf, also schreibt das Kit nur den Plan, dem du zugestimmt hast.
+> Der Harness lief an einem echten Windows-Automaten mit Kit v1.4.0 (ApiVersion 1.6), über stdio und über den MCP-Server
 > des Kits, und mit einem lokalen Modell über Ollama. Alle Meilensteine (M1–M6) sind abgeschlossen: Gedächtnis über
 > Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport, `fagent report`, Datenbank-Migrationen,
-> 155 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
+> 161 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
 > messen. Der 12-stufige Smoke-Test lief zu 100% grün auf realer Hardware durch. Siehe [docs/HANDOFF.md](docs/HANDOFF.md),
 > das [CHANGELOG](CHANGELOG.md) und die [ROADMAP](ROADMAP.md).
 

@@ -3,9 +3,9 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); the version in `VERSION` and `package.json` is the
 harness version, independent of the kit's.
 
-## [Unreleased]
+## [0.5.0] - 2026-10-11
 
-The contract re-pinned to kit ApiVersion 1.8: the Wiimote binding by Bluetooth address.
+The contract re-pinned to kit v1.5.0 (ApiVersion 1.8): the Wiimote binding by Bluetooth address.
 
 ### Added
 

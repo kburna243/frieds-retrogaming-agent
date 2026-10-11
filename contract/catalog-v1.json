@@ -3,9 +3,9 @@
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "feat/wiimote-mac-binding",
-    "commit": "d50ba4939fe1970e4966af823e64fcace1357639",
-    "kitVersion": "1.4.0",
+    "branch": "origin/main",
+    "commit": "bd0d98c5f16304cc8753cca37e9535b4a8d21e34",
+    "kitVersion": "1.5.0",
     "fetched": "2026-10-11"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",

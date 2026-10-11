@@ -55,8 +55,8 @@ export function Hero() {
         kind: "dim",
         text:
           lang === "en"
-            ? "→ Kit-API v1.3 (Kit v0.4.0) · 37 operations · Fake-Cabinet: off"
-            : "→ Kit-API v1.3 (Kit v0.4.0) · 37 Operationen · Fake-Cabinet: off",
+            ? "→ Kit-API v1.8 (Kit v1.5.0) · 75 operations · Fake-Cabinet: off"
+            : "→ Kit-API v1.8 (Kit v1.5.0) · 75 Operationen · Fake-Cabinet: off",
       },
       { kind: "ok", text: "✔ Virtual Pinball    VPX 10.8 · PinUP Popper · 3 Screens" },
       { kind: "ok", text: "✔ Lightgun           Wiimote ×2 · DemulShooter OK" },
