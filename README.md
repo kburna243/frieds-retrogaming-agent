@@ -34,7 +34,7 @@
 > New in 0.5: the contract is pinned to kit v1.5.0 (ApiVersion 1.8) with the tools `wiimote_order` and `wiimote_bind`; an
 > apply carries the kit's `PlanId` from the dry run, so the kit writes only the plan you approved.
 > The harness ran on a real Windows cabinet against kit v1.4.0 (ApiVersion 1.6), over stdio and over the kit's MCP server,
-> and with a local model through Ollama. All milestones (M1–M6) are completed: memory across sessions, `npm i -g .`,
+> and with a local model through Ollama. Memory across sessions, `npm i -g .`,
 > streaming and `chat --continue`, the MCP transport, `fagent report`, database migrations, 161 passing tests and three
 > repeatable scenarios (`eval/`) that judge a model on the order of its kit calls. The 12-step smoke test passed 12/12
 > on real hardware. See [docs/HANDOFF.md](docs/HANDOFF.md), the [CHANGELOG](CHANGELOG.md) and the [ROADMAP](ROADMAP.md).
@@ -91,17 +91,17 @@ PC at all.
 | **Tools from the live catalog** | ✅ Stable | 11 fixed tools plus `run_step`; read-only level offers reads only |
 | **Policy gate** | ✅ Every stage pinned by a test | level → catalog → parameters → dry run → plan → human → `-Apply` → verify |
 | **Memory** (SQLite via `node:sqlite`) | ✅ Stable | sessions, messages, tool calls, plans, approvals, kit results, all timestamped |
-| **Memory read back** (M1) | 🆕 In 0.2.0 | a new session starts from a fixed-size digest of the last ones; a remembered yes grants nothing |
+| **Memory read back** | ✅ Stable | a new session starts from a fixed-size digest of the last ones; a remembered yes grants nothing |
 | **Model gateways** | ✅ Stable | local Ollama or any OpenAI-compatible endpoint; cloud only with `-Anonymize` |
 | **CLI `fagent`** | ✅ Stable | `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version`; `--json` on every command; no `--yes` anywhere |
 | **Fake cabinet** (`test/kit/`) | ✅ Stable | the kit API as a second implementation, so all tests run on Linux |
-| **Packaging** (M2) | 🆕 In 0.2.0 | `npm i -g .` installs `fagent`, `fagent --version`; checked on Linux and Windows in CI |
-| **Terminal** (M3) | 🆕 In 0.2.0 | answers stream in, `[round/max]` on every tool call, `chat --continue` carries the words of the last conversation |
-| **Database migrations** | 🆕 In 0.2.0 | an older harness database is brought forward on open; a newer one is refused |
-| **MCP transport** (M4) | 🆕 In 0.2.0 · verified on the cabinet | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
-| **Scenarios** (M5) | 🆕 In 0.2.0 | three cabinet problems as repeatable evals (`eval/`), asserting the order of kit calls |
-| **Report mode** (M6) | 🆕 In 0.2.0 | `fagent report --since 7d` summarizes a period from the audit trail; reads the database only, no kit root needed |
-| **Contract snapshot** (kit `contract/`) | 🆕 In 0.3.0 | 73 operations pinned at kit v1.4.0 (ApiVersion 1.6) — the step 15 USB lightgun route with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and **Sinden** came through the catalog rules clean, no harness code needed |
+| **Packaging** | ✅ Stable | `npm i -g .` installs `fagent`, `fagent --version`; checked on Linux and Windows in CI |
+| **Terminal** | ✅ Stable | answers stream in, `[round/max]` on every tool call, `chat --continue` carries the words of the last conversation |
+| **Database migrations** | ✅ Stable | an older harness database is brought forward on open; a newer one is refused |
+| **MCP transport** | ✅ Verified on the cabinet | `--transport mcp` uses the kit's MCP server (kit ≥ 0.3.0); the catalog still comes from `Invoke-KitApi.ps1` |
+| **Scenarios** | ✅ Stable | three cabinet problems as repeatable evals (`eval/`), asserting the order of kit calls |
+| **Report mode** | ✅ Stable | `fagent report --since 7d` summarizes a period from the audit trail; reads the database only, no kit root needed |
+| **Contract snapshot** (kit `contract/`) | ✅ Stable | 73 operations pinned at kit v1.4.0 (ApiVersion 1.6) — the step 15 USB lightgun route with Gun4IR, OpenFIRE, AimTrak, Retro Shooter and **Sinden** came through the catalog rules clean, no harness code needed |
 
 ---
 
