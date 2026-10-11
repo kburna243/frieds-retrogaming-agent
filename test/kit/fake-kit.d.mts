@@ -55,6 +55,8 @@ export declare const FAKE_PERSON: { user: string; profile: string; computer: str
 export declare const SYNTH_RETROBAT: string;
 /** The one folder the fake cabinet recognises as a PinballY installation (`pinbally.detect`, `pinbally.retarget`). */
 export declare const PINBALLY_ROOT: string;
+/** Two synthetic Wiimotes, in connection order (ApiVersion 1.8 binding tests). */
+export declare const FAKE_WIIMOTES: readonly [{ Mac: string; Model: string }, { Mac: string; Model: string }];
 export declare function catalog(): FakeOperationSpec[];
 export declare function defaultState(): Record<string, unknown>;
 export declare function handle(request: FakeRequest, context?: { state?: Record<string, unknown> }): { result: FakeResult; exitCode: number };

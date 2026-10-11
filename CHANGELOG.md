@@ -3,6 +3,26 @@
 Format follows [Keep a Changelog](https://keepachangelog.com/); the version in `VERSION` and `package.json` is the
 harness version, independent of the kit's.
 
+## [Unreleased]
+
+The contract re-pinned to kit ApiVersion 1.8: the Wiimote binding by Bluetooth address.
+
+### Added
+
+- Tools `wiimote_order` (read) and `wiimote_bind` (change). `wiimote_bind` takes `Binding` (`MAC=player,...`);
+  without it the kit saves the current connection order, which a model can ask for without seeing an address.
+- The policy engine applies a kit plan that names itself (`Data.PlanId`) with that id, taken from its own dry run:
+  the kit then writes only the plan the person saw. `PlanId` is never a tool parameter, and a caller who passes one
+  is refused before the kit is called.
+- The fake cabinet answers `controllers.wiimote_order` / `controllers.wiimote_bind` as API 1.8 and masks Bluetooth
+  addresses as `<MAC>` under `-Anonymize`, like the kit.
+
+### Known limits
+
+- In an anonymized session (any cloud model) the plan a person approves reads `player 1 = <MAC> (model)`: the PlanId
+  still pins the real plan, but two Wiimotes of the same model look alike. Bind them by switching them on in player
+  order (no `Binding`), or choose by address in Hotwm, which shows the real addresses locally.
+
 ## [0.4.0] - 2026-10-02
 
 The contract re-pinned to kit v1.4.0.

@@ -1,12 +1,12 @@
 {
-  "ApiVersion": "1.7",
+  "ApiVersion": "1.8",
   "Source": {
     "repository": "frieds-retrogaming-kit",
     "url": "https://github.com/kburna243/frieds-retrogaming-kit",
-    "branch": "origin/main",
-    "commit": "44d7a6b15af748757f44dea4bed9cf7b72cfe60a",
+    "branch": "feat/wiimote-mac-binding",
+    "commit": "d50ba4939fe1970e4966af823e64fcace1357639",
     "kitVersion": "1.4.0",
-    "fetched": "2026-10-03"
+    "fetched": "2026-10-11"
   },
   "Note": "Snapshot of the shape of Get-KitOperation (API.md). Development and test fixture only: at run time the harness always reads the live catalog from the kit, never this file.",
   "Operations": [
@@ -214,8 +214,19 @@
       "Suite": "",
       "Interactive": false,
       "Available": true,
-      "Description": "Save the current Wiimote order as the player binding (Bluetooth address -> player); the plan shows the binding, -Apply writes it.",
-      "Parameters": []
+      "Description": "Save the Wiimote player binding (Bluetooth address -> player): Binding \"MAC=1,MAC=2\" as chosen, without it the current connection order. The plan shows the binding and a PlanId; -Apply with that PlanId writes only if nothing changed since.",
+      "Parameters": [
+        {
+          "Name": "Binding",
+          "Type": "String",
+          "Mandatory": false
+        },
+        {
+          "Name": "PlanId",
+          "Type": "String",
+          "Mandatory": false
+        }
+      ]
     },
     {
       "Name": "controllers.wiimote_order",
