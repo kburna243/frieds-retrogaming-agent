@@ -185,6 +185,9 @@ export class PolicyEngine {
         `${operation} exists in the kit but is not one of your tools; a person can run it with: fagent run ${operation}`,
       );
     }
+    if (Object.keys(parameters).some((key) => key.toLowerCase() === 'planid')) {
+      throw new PolicyError(PolicyCode.UnknownParameter, `${operation}: PlanId is set by the harness from the dry run, never by a caller`);
+    }
     const problems = validateParameters(spec, parameters);
     if (problems.length > 0) {
       const hasUnknown = problems.some((p) => p.startsWith('unknown'));
@@ -263,8 +266,13 @@ export class PolicyEngine {
       throw new PolicyError(PolicyCode.ApprovalAlreadyUsed, `the approval for ${operation} was already spent`);
     }
 
+    // A kit plan that names itself (Data.PlanId, ApiVersion 1.8) is applied with that id: the kit then writes only
+    // the plan the person just saw and refuses if its state moved in between. The id comes from this dry run only.
+    const kitPlanId = dry.result.Data?.PlanId;
+    const applyParameters =
+      typeof kitPlanId === 'string' && /^[0-9a-f]{64}$/.test(kitPlanId) && spec.Parameters.some((p) => p.Name === 'PlanId') ? { ...parameters, PlanId: kitPlanId } : parameters;
     const applied = await this.#call(
-      { operation, parameters, apply: true, approved: plan.approvals.length > 0, anonymize: this.#anonymize },
+      { operation, parameters: applyParameters, apply: true, approved: plan.approvals.length > 0, anonymize: this.#anonymize },
       'apply',
       label,
     );

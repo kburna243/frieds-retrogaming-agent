@@ -10,14 +10,16 @@
  * looks for (`Friedhelm`, `GAMEMASTER-PC`, `example.test`). No real machine is described here.
  */
 
-export const API_VERSION = '1.7';
+import { createHash } from 'node:crypto';
+
+export const API_VERSION = '1.8';
 
 /**
  * The kit's own version, reported since ApiVersion 1.1 in every result (`KitVersion`).
  * The fake says what the contract snapshot in contract/ was taken from, so a test can see the same number a real
  * cabinet of that kit version would report.
  */
-export const KIT_VERSION = '1.4.0';
+export const KIT_VERSION = '1.5.0';
 
 /** The synthetic "person" behind the fake cabinet. Used only to prove `-Anonymize` works. */
 export const FAKE_PERSON = {
@@ -37,6 +39,13 @@ const REPLACEMENTS = [
   [FAKE_PERSON.ip, '<IP>'],
   [FAKE_PERSON.email, '<EMAIL>'],
 ];
+
+/** Two synthetic Wiimotes (Bluetooth addresses invented for this fixture), in connection order. */
+export const FAKE_WIIMOTES = [
+  { Mac: '0019FD000001', Model: 'RVL-CNT-01' },
+  { Mac: '0019FD000002', Model: 'RVL-CNT-01-TR' },
+];
+const WIIMOTE_LEDGER = `${FAKE_PERSON.profile}\\RetroCabinet\\wiimotes.json`;
 
 /** A synthetic cabinet root, in the style the kit's own allowlist permits (C:\RetroBat, D:\Pinball). */
 export const SYNTH_RETROBAT = 'C:\\RetroBat';
@@ -104,6 +113,9 @@ export function catalog() {
     { Name: 'support.bundle', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Writes an anonymized support bundle (doctor, environment, step states, logs).', Parameters: [{ Name: 'Destination', Type: 'String', Mandatory: false }] },
     // Kit 0.3.x / ApiVersion 1.2 and 1.3: the second pinball front end. A read that describes it and a gated
     // write that gives a copied installation the paths of this machine.
+    { Name: 'controllers.wiimote_order', Kind: 'Read', Suite: '', Interactive: false, Available: true, Description: 'Which Wiimote is player 1, 2, ... in Gunmote right now (Gunmote numbers them in the order they connect) and whether that matches the saved binding: Ok, Swapped, Unbound, Unclear, NoGunmote, NoWiimote.', Parameters: [] },
+    // ApiVersion 1.8: the Wiimote binding by Bluetooth address, applied only with the id of the plan that was shown.
+    { Name: 'controllers.wiimote_bind', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Save the Wiimote player binding (Bluetooth address -> player): Binding "MAC=1,MAC=2" as chosen, without it the current connection order. The plan shows the binding and a PlanId; -Apply with that PlanId writes only if nothing changed since.', Parameters: [{ Name: 'Binding', Type: 'String', Mandatory: false }, { Name: 'PlanId', Type: 'String', Mandatory: false }] },
     { Name: 'pinbally.detect', Kind: 'Read', Suite: '', Interactive: false, Available: true, Description: 'Inspect a PinballY installation: version, systems, table databases and which path references do not resolve on this machine. Reads only.', Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }] },
     { Name: 'pinbally.retarget', Kind: 'Change', Suite: '', Interactive: false, Available: true, Description: 'Give the dead absolute paths of a PinballY installation the targets of this machine, following pairs written as Old=New (the same folder under another drive is the usual case). Only path values that do not resolve here are planned, and only when the new path exists; comments, [TOKEN] values, relative paths, DefaultSettings.txt and the own copies of the program are never touched. Dry run without -Apply; the plan needs -Approved.', Parameters: [{ Name: 'Path', Type: 'String', Mandatory: true }, { Name: 'Map', Type: 'String[]', Mandatory: true }, { Name: 'BackupDir', Type: 'String', Mandatory: false }] },
   ];
@@ -151,6 +163,8 @@ export function defaultState() {
     bundle: null,
     /** PinballY: the values this fake cabinet has already been given new paths for, keyed by setting name. */
     pinballYFixed: {},
+    /** The saved Wiimote binding as the kit's wiimotes.json would hold it; '' = no file yet. */
+    wiimoteLedger: '',
   };
 }
 
@@ -327,6 +341,18 @@ export function handle(request, context = {}) {
       );
     }
 
+    case 'controllers.wiimote_order': {
+      // Gunmote is running and both fake Wiimotes connected in FAKE_WIIMOTES order; the binding is the ledger.
+      const bound = state.wiimoteLedger ? JSON.parse(state.wiimoteLedger) : [];
+      const rows = FAKE_WIIMOTES.map((w, i) => ({ Player: i + 1, Mac: w.Mac, Model: w.Model, Expected: bound.find((b) => b.Mac === w.Mac)?.Player ?? null }));
+      const State = !bound.length ? 'Unbound' : rows.some((r) => r.Expected !== null && r.Expected !== r.Player) ? 'Swapped' : 'Ok';
+      const SwitchOnOrder = rows.filter((r) => r.Expected !== null).sort((a, b) => a.Expected - b.Expected).map((r) => `${r.Mac} (${r.Model})`);
+      return finish(result({ operation, status: 'Ok', message: `Wiimote order: ${State}`, data: { State, Wiimotes: rows, SwitchOnOrder }, startedAt }), anonymize);
+    }
+
+    case 'controllers.wiimote_bind':
+      return wiimoteBind({ parameters, state, apply, startedAt, anonymize });
+
     case 'pinbally.detect':
       return pinballyDetect({ parameters, state, startedAt, anonymize });
 
@@ -339,6 +365,42 @@ export function handle(request, context = {}) {
 
   if (operation.startsWith('step.')) return stepOperation(operation, { state, apply, approved, startedAt, anonymize, parameters });
   return finish(result({ operation, status: 'NotAvailable', message: `no handler for ${operation}`, startedAt }), anonymize);
+}
+
+/**
+ * controllers.wiimote_bind (ApiVersion 1.8). Binding = 'MAC=player,...' as chosen, else the connection order. The plan's
+ * PlanId hashes the binding with the ledger it replaces; an apply that brings a different id writes nothing.
+ */
+function wiimoteBind({ parameters, state, apply, startedAt, anonymize }) {
+  const operation = 'controllers.wiimote_bind';
+  const fail = (message) => finish(result({ operation, kind: 'Change', status: 'Failed', message, errors: [message], startedAt }), anonymize);
+  let entries;
+  if (parameters.Binding) {
+    entries = [];
+    for (const part of String(parameters.Binding).split(',').map((p) => p.trim()).filter(Boolean)) {
+      const match = /^((?:[0-9A-Fa-f]{2}[:-]?){5}[0-9A-Fa-f]{2})\s*=\s*([1-4])$/.exec(part);
+      if (!match) return fail(`Binding entry '${part}' is not MAC=player (player 1 to 4), e.g. 0017AB2CD0A0=1`);
+      const mac = match[1].replace(/[:-]/g, '').toUpperCase();
+      entries.push({ Player: Number(match[2]), Mac: mac, Model: FAKE_WIIMOTES.find((w) => w.Mac === mac)?.Model ?? null });
+    }
+    if (entries.length === 0) return fail('Binding is empty: name at least one Wiimote as MAC=player');
+    for (const key of ['Mac', 'Player']) {
+      if (new Set(entries.map((e) => e[key])).size !== entries.length) return fail(`Binding names a ${key} more than once`);
+    }
+    entries.sort((a, b) => a.Player - b.Player);
+  } else {
+    entries = FAKE_WIIMOTES.map((w, i) => ({ Player: i + 1, Mac: w.Mac, Model: w.Model }));
+  }
+  const planId = createHash('sha256').update(`${state.wiimoteLedger}|${entries.map((e) => `${e.Player}=${e.Mac}`).join(',')}`).digest('hex');
+  if (apply && 'PlanId' in parameters && parameters.PlanId !== planId) {
+    return fail('The Wiimote binding or wiimotes.json changed since this plan was made: nothing written, make a new plan.');
+  }
+  const text = entries.map((e) => `player ${e.Player} = ${e.Mac} (${e.Model ?? 'model unknown'})`).join(', ');
+  const changes = entries.map((e) => ({ Kind: 'File', Target: WIIMOTE_LEDGER, Detail: `player ${e.Player} = ${e.Mac}` }));
+  const data = { Wiimotes: entries, Source: parameters.Binding ? 'Binding' : 'CurrentOrder', PlanId: planId };
+  if (!apply) return finish(result({ operation, kind: 'Change', status: 'WhatIf', message: `Plan: ${text}. Apply with -Apply.`, changes, data, startedAt }), anonymize);
+  state.wiimoteLedger = JSON.stringify(entries);
+  return finish(result({ operation, kind: 'Change', status: 'Done', applied: true, message: `Wiimote binding saved: ${text}`, changes, data, startedAt }), anonymize);
 }
 
 function isKitBackup(path) {
@@ -803,6 +865,9 @@ export function anonymizeDeep(value) {
   if (typeof value === 'string') {
     let text = value;
     for (const [needle, replacement] of REPLACEMENTS) text = text.split(needle).join(replacement);
+    // Bluetooth addresses (ApiVersion 1.8): the separated form and the bare upper-case one the kit uses.
+    text = text.replace(/(?<![0-9A-Fa-f:-])(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}(?![0-9A-Fa-f:-])/g, '<MAC>');
+    text = text.replace(/(?<![0-9A-Za-z-])[0-9A-F]{12}(?![0-9A-Za-z])/g, '<MAC>');
     return text;
   }
   if (Array.isArray(value)) return value.map(anonymizeDeep);
