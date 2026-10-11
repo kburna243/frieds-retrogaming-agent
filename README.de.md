@@ -34,7 +34,7 @@
 > Neu in 0.5: Der Vertrag ist auf Kit v1.5.0 (ApiVersion 1.8) festgelegt, mit den Tools `wiimote_order` und `wiimote_bind`;
 > ein Apply trägt die `PlanId` des Kits aus dem Probelauf, also schreibt das Kit nur den Plan, dem du zugestimmt hast.
 > Der Harness lief an einem echten Windows-Automaten mit Kit v1.4.0 (ApiVersion 1.6), über stdio und über den MCP-Server
-> des Kits, und mit einem lokalen Modell über Ollama. Alle Meilensteine (M1–M6) sind abgeschlossen: Gedächtnis über
+> des Kits, und mit einem lokalen Modell über Ollama. Gedächtnis über
 > Sitzungen, `npm i -g .`, Streaming und `chat --continue`, der MCP-Transport, `fagent report`, Datenbank-Migrationen,
 > 161 bestandene Tests und drei wiederholbare Szenarien (`eval/`), die ein Modell an der Reihenfolge seiner Kit-Aufrufe
 > messen. Der 12-stufige Smoke-Test lief zu 100% grün auf realer Hardware durch. Siehe [docs/HANDOFF.md](docs/HANDOFF.md),
@@ -93,17 +93,17 @@ Modell verlässt gar nichts den PC.
 | **Tools aus dem Live-Katalog** | ✅ Stabil | 11 feste Tools plus `run_step`; die Stufe read-only bietet nur Lese-Tools |
 | **Policy-Gate** | ✅ Jede Stufe durch einen Test festgenagelt | Stufe → Katalog → Parameter → Dry Run → Plan → Mensch → `-Apply` → Verifikation |
 | **Gedächtnis** (SQLite über `node:sqlite`) | ✅ Stabil | Sitzungen, Nachrichten, Tool-Aufrufe, Pläne, Freigaben, Kit-Ergebnisse, alle mit Zeitstempel |
-| **Gedächtnis wird gelesen** (M1) | 🆕 In 0.2.0 | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
+| **Gedächtnis wird gelesen** | ✅ Stabil | eine neue Sitzung beginnt mit einer Zusammenfassung fester Größe; ein gemerktes Ja gibt nichts frei |
 | **Modell-Gateways** | ✅ Stabil | lokales Ollama oder jeder OpenAI-kompatible Endpunkt; Cloud nur mit `-Anonymize` |
 | **CLI `fagent`** | ✅ Stabil | `doctor`, `tools`, `status`, `run`, `chat`, `history`, `report`, `version`; `--json` bei jedem Befehl; nirgends ein `--yes` |
 | **Fake-Automat** (`test/kit/`) | ✅ Stabil | die Kit-API als zweite Implementierung, damit alle Tests unter Linux laufen |
-| **Packaging** (M2) | 🆕 In 0.2.0 | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
-| **Terminal** (M3) | 🆕 In 0.2.0 | Antworten erscheinen, während sie entstehen, `[Runde/Max]` bei jedem Tool-Aufruf, `chat --continue` nimmt die Worte des letzten Gesprächs mit |
-| **Datenbank-Migrationen** | 🆕 In 0.2.0 | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
-| **MCP-Transport** (M4) | 🆕 In 0.2.0 · am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
-| **Szenarien** (M5) | 🆕 In 0.2.0 | drei Automaten-Probleme als wiederholbare Evals (`eval/`), gemessen an der Reihenfolge der Kit-Aufrufe |
-| **Berichtsmodus** (M6) | 🆕 In 0.2.0 | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
-| **Contract-Snapshot** (Kit `contract/`) | 🆕 In 0.3.0 | 73 Operationen, festgenagelt an Kit v1.4.0 (ApiVersion 1.6) — die Schritt-15-USB-Lightgun-Route mit Gun4IR, OpenFIRE, AimTrak, Retro Shooter und **Sinden** ging sauber durch die Katalog-Regeln, ohne Harness-Code |
+| **Packaging** | ✅ Stabil | `npm i -g .` installiert `fagent`, `fagent --version`; in der CI unter Linux und Windows geprüft |
+| **Terminal** | ✅ Stabil | Antworten erscheinen, während sie entstehen, `[Runde/Max]` bei jedem Tool-Aufruf, `chat --continue` nimmt die Worte des letzten Gesprächs mit |
+| **Datenbank-Migrationen** | ✅ Stabil | eine ältere Harness-Datenbank wird beim Öffnen nachgezogen; eine neuere wird abgelehnt |
+| **MCP-Transport** | ✅ Am Automaten geprüft | `--transport mcp` nutzt den MCP-Server des Kits (Kit ≥ 0.3.0); der Katalog kommt weiter von `Invoke-KitApi.ps1` |
+| **Szenarien** | ✅ Stabil | drei Automaten-Probleme als wiederholbare Evals (`eval/`), gemessen an der Reihenfolge der Kit-Aufrufe |
+| **Berichtsmodus** | ✅ Stabil | `fagent report --since 7d` fasst einen Zeitraum aus dem Audit-Trail zusammen; liest nur die Datenbank, braucht keinen Kit-Pfad |
+| **Contract-Snapshot** (Kit `contract/`) | ✅ Stabil | 73 Operationen, festgenagelt an Kit v1.4.0 (ApiVersion 1.6) — die Schritt-15-USB-Lightgun-Route mit Gun4IR, OpenFIRE, AimTrak, Retro Shooter und **Sinden** ging sauber durch die Katalog-Regeln, ohne Harness-Code |
 
 ---
 
